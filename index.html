@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d6efd">
+  <title>Medic Contact Tracker — By Itsmebroarif</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root{--sidebar-w:240px;--navbar-h:56px}
+    body{background:#f4f5f7;font-size:.875rem}
+    .hidden{display:none!important}
+
+    /* Navbar */
+    .navbar{height:var(--navbar-h);z-index:1030;border-bottom:1px solid #dee2e6}
+    .navbar-brand{font-weight:600;font-size:1rem;color:#212529}
+    .avatar{width:32px;height:32px;object-fit:cover}
+
+    /* Sidebar */
+    .app-sidebar{position:fixed;top:var(--navbar-h);bottom:0;left:0;width:var(--sidebar-w);background:#fff;border-right:1px solid #dee2e6;z-index:1020;display:flex;flex-direction:column;transition:margin-left .2s ease,transform .2s ease}
+    .sidebar-nav{padding:.5rem;overflow-y:auto}
+    .nav-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#6c757d;font-weight:700;padding:.85rem .75rem .3rem}
+    .nav-item{display:flex;align-items:center;gap:.65rem;width:100%;border:0;background:transparent;padding:.55rem .75rem;border-radius:.375rem;color:#344054;font-weight:500;text-align:left;transition:background .15s}
+    .nav-item i{font-size:1rem;width:20px;text-align:center}
+    .nav-item:hover{background:#f1f3f5}
+    .nav-item.active{background:#e7f1ff;color:#0d6efd;font-weight:600}
+    .sidebar-footer{margin-top:auto;border-top:1px solid #e9ecef;padding:.85rem 1rem;color:#6c757d;font-size:.75rem;line-height:1.6}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1015}
+
+    /* Layout */
+    .main-content{margin-left:var(--sidebar-w);margin-top:var(--navbar-h);min-height:calc(100vh - var(--navbar-h));transition:margin-left .2s ease}
+    body.sidebar-collapsed .app-sidebar{margin-left:calc(-1 * var(--sidebar-w))}
+    body.sidebar-collapsed .main-content{margin-left:0}
+    @media(max-width:991.98px){
+      .main-content{margin-left:0}
+      .app-sidebar{margin-left:0!important;transform:translateX(-100%);box-shadow:0 .5rem 1rem rgba(0,0,0,.15)}
+      body.sidebar-open .app-sidebar{transform:translateX(0)}
+      body.sidebar-open .sidebar-overlay{display:block}
+    }
+
+    /* Components */
+    .content-view{display:none}.content-view.active{display:block}
+    .card{border-color:#e9ecef;font-size:.875rem}
+    .page-eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:#0d6efd;font-weight:700}
+    .stat-value{font-size:1.75rem;font-weight:700;line-height:1.2}
+    .stat-note{font-size:.75rem;color:#6c757d}
+    .stat-icon{width:36px;height:36px;border-radius:.5rem;display:grid;place-items:center;font-size:1.05rem}
+
+    .search{position:relative;min-width:220px;flex:1}
+    .search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6c757d}
+    .search input{padding-left:36px}
+
+    .table{white-space:nowrap;margin-bottom:0}
+    .table th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#6c757d;background:#f8f9fa;font-weight:700;border-bottom-width:1px}
+    .table td{vertical-align:middle;font-size:.8125rem}
+
+    .facility{display:flex;align-items:center;gap:.6rem}
+    .facility-icon{width:36px;height:36px;border-radius:.5rem;display:grid;place-items:center;background:#e7f5ff;color:#0d6efd;font-size:1rem;flex-shrink:0}
+    .facility-name{font-weight:600;color:#212529;font-size:.8125rem}
+    .facility-sub{font-size:.72rem;color:#6c757d;margin-top:2px}
+    .type-pill,.status-pill{display:inline-flex;align-items:center;gap:5px;border-radius:1rem;padding:.25rem .6rem;font-size:.7rem;font-weight:600;background:#e9ecef;color:#495057}
+    .status-pill{background:#e7f5ff;color:#084298}
+    .row-actions{display:flex;gap:.35rem}
+    .icon-btn{width:32px;height:32px;display:inline-grid;place-items:center;border:1px solid #dee2e6;background:#fff;border-radius:.375rem;color:#6c757d;padding:0}
+    .icon-btn:hover{background:#f8f9fa;color:#0d6efd}
+    .empty{padding:2.5rem 1rem;text-align:center;color:#6c757d}
+    .empty i{font-size:2rem;display:block;margin-bottom:.5rem;color:#adb5bd}
+    .empty strong{display:block;color:#344054;margin-bottom:.25rem}
+
+    /* Kanban */
+    .kanban{display:grid;grid-template-columns:repeat(var(--kanban-cols,6),minmax(230px,1fr));gap:12px;overflow-x:auto;padding-bottom:8px;align-items:start}
+    .kanban-col{background:#eef1f4;border:1px solid #dee2e6;border-radius:.375rem;padding:10px;min-height:340px}
+    .kanban-col.drag-over{background:#cff4fc;outline:2px dashed #0dcaf0}
+    .kanban-col-head{display:flex;justify-content:space-between;align-items:center;padding:2px 4px 12px}
+    .kanban-col-title{font-weight:600;font-size:.8125rem;display:flex;align-items:center;gap:8px}
+    .stage-dot{width:8px;height:8px;border-radius:50%;background:#6c757d;flex-shrink:0}
+    .stage-count{background:#dee2e6;border-radius:1rem;padding:2px 8px;font-size:.7rem;color:#495057;font-weight:700}
+    .kanban-cards{display:grid;gap:8px;min-height:260px}
+    .kanban-card{background:#fff;border:1px solid #dee2e6;border-radius:.375rem;padding:12px;cursor:grab;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+    .kanban-card:active{cursor:grabbing}
+    .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .card-name{font-weight:600;font-size:.8125rem;line-height:1.4;color:#212529}
+    .card-type{font-size:.68rem;color:#0d6efd;background:#e7f5ff;border-radius:.25rem;padding:3px 6px;white-space:nowrap}
+    .card-location{color:#6c757d;font-size:.7rem;margin-top:6px;display:flex;gap:5px;align-items:center}
+    .card-contact{font-size:.75rem;color:#495057;margin-top:8px;overflow-wrap:anywhere}
+    .card-foot{border-top:1px solid #e9ecef;margin-top:10px;padding-top:8px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+    .card-date{font-size:.68rem;color:#6c757d}
+    .card-actions{display:flex;gap:2px}
+    .card-actions button{border:0;background:transparent;color:#6c757d;padding:2px 4px}
+    .card-actions button:hover{color:#0d6efd}
+    @media(max-width:1100px){.kanban{grid-template-columns:repeat(var(--kanban-cols,6),230px)}}
+
+    /* Templates */
+    .templates-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    @media(max-width:767.98px){.templates-grid{grid-template-columns:1fr}}
+    .template-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px}
+    .template-icon{width:38px;height:38px;border-radius:.5rem;display:grid;place-items:center;background:#e7f5ff;color:#0d6efd;font-size:1.1rem;flex-shrink:0}
+    .template-body{background:#f8f9fa;border:1px solid #e9ecef;border-radius:.375rem;padding:12px;white-space:pre-wrap;line-height:1.65;font-size:.8125rem;color:#344054;max-height:230px;overflow:auto}
+
+    /* SweetAlert form (Bootstrap) */
+    .swal2-popup{border-radius:.5rem!important}
+    .swal2-input,.swal2-select,.swal2-textarea{border-radius:.375rem!important;font-size:.875rem!important}
+    .swal2-html-container{margin-top:.5rem!important}
+    .swal2-html-container .form-label{font-size:.78rem;font-weight:600;color:#495057;margin-bottom:.25rem}
+    .swal2-html-container .form-text{font-size:.7rem}
+    .bulk-row{background:#f8f9fa;border:1px solid #e9ecef;border-radius:.375rem;padding:.6rem}
+    .bulk-row .form-control,.bulk-row .form-select{font-size:.8rem}
+    .bulk-scroll{max-height:320px;overflow-y:auto;padding-right:2px}
+
+    /* Wizard form */
+    .wizard-steps{display:flex;align-items:center;justify-content:center;margin:10px 0 16px}
+    .wizard-step-dot{display:flex;align-items:center;gap:6px}
+    .wizard-step-dot .num{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:700;background:#e9ecef;color:#6c757d;flex-shrink:0}
+    .wizard-step-dot .lbl{font-size:.72rem;color:#6c757d;font-weight:500}
+    .wizard-step-dot.active .num{background:#0d6efd;color:#fff}
+    .wizard-step-dot.active .lbl{color:#0d6efd;font-weight:700}
+    .wizard-step-dot.done .num{background:#0d6efd;color:#fff}
+    .wizard-step-dot.done .lbl{color:#495057}
+    .wizard-connector{width:36px;height:2px;background:#dee2e6;margin:0 8px;flex-shrink:0}
+    .wizard-connector.done{background:#0d6efd}
+    .wizard-panel{display:none}
+    .wizard-panel.active{display:block}
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-light bg-white fixed-top">
+  <div class="container-fluid px-3 d-flex align-items-center">
+    <button class="btn btn-light border me-2" id="sidebarToggle" type="button" aria-label="Buka/tutup menu"><i class="bi bi-list fs-5"></i></button>
+    <span class="navbar-brand mb-0 me-auto"><i class="bi bi-heart-pulse-fill text-primary me-1"></i> Medic Contact Tracker</span>
+    <span class="d-none d-md-inline text-muted small me-3"><i class="bi bi-calendar3 me-1"></i><span id="todayLabel"></span></span>
+    <div class="dropdown">
+      <a class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+        <img src="https://miro.medium.com/v2/resize:fit:2400/1*99hHL9XJ7EzQeC6RB5_Qiw.jpeg" alt="Foto profil" class="rounded-circle avatar me-2 border">
+        <span class="d-none d-sm-inline small fw-semibold">Arif Permana Putrasuryana</span>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><h6 class="dropdown-header">Arif Permana Putrasuryana</h6></li>
+        <li><a class="dropdown-item" href="#" data-view="settings"><i class="bi bi-sliders me-2"></i>Pengaturan Data</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><span class="dropdown-item-text text-muted small px-3">Data tersimpan di browser ini</span></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="app-sidebar" id="appSidebar">
+  <div class="sidebar-nav">
+    <div class="nav-label">Workspace</div>
+    <button class="nav-item active" data-view="overview"><i class="bi bi-grid-1x2"></i> Overview</button>
+    <button class="nav-item" data-view="contacts"><i class="bi bi-hospital"></i> Data Fasilitas</button>
+    <button class="nav-item" data-view="kanban"><i class="bi bi-kanban"></i> Pipeline Kanban</button>
+    <div class="nav-label">Tools</div>
+    <button class="nav-item" data-view="templates"><i class="bi bi-chat-square-text"></i> Template Pesan</button>
+    <button class="nav-item" data-view="settings"><i class="bi bi-sliders"></i> Pengaturan Data</button>
+  </div>
+  <div class="sidebar-footer">Medic Contact Tracker<br>By Itsmebroarif · v1.1<br><span class="text-success">&#9679;</span> Data tersimpan di browser ini</div>
+</aside>
+
+<div class="main-content">
+  <div class="container-fluid py-4 px-3 px-md-4">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+      <div>
+        <div class="page-eyebrow">Medisin · Implementation Operations</div>
+        <h1 class="h4 mt-1 mb-1" id="pageTitle">Overview</h1>
+        <p class="text-muted mb-0" id="pageSubtitle">Pantau perjalanan implementasi fasilitas kesehatan dari terdaftar hingga go-live.</p>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-outline-secondary" id="bulkBtn"><i class="bi bi-table"></i> Bulk Input</button>
+        <button class="btn btn-outline-secondary" id="exportBtn"><i class="bi bi-download"></i> Export JSON</button>
+        <button class="btn btn-primary" id="addBtn"><i class="bi bi-plus-lg"></i> Tambah Fasilitas</button>
+      </div>
+    </div>
+
+    <section class="content-view active" id="view-overview">
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3"><div class="card h-100"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="text-muted fw-semibold small">Total Fasilitas</span><span class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-hospital"></i></span></div>
+          <div class="stat-value mt-2" id="statTotal">0</div><div class="stat-note">Semua fasilitas terdaftar</div>
+        </div></div></div>
+        <div class="col-6 col-xl-3"><div class="card h-100"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="text-muted fw-semibold small">Dalam Proses</span><span class="stat-icon bg-info-subtle text-info-emphasis"><i class="bi bi-arrow-repeat"></i></span></div>
+          <div class="stat-value mt-2" id="statActive">0</div><div class="stat-note">Kick-off hingga monitoring</div>
+        </div></div></div>
+        <div class="col-6 col-xl-3"><div class="card h-100"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="text-muted fw-semibold small">Sudah Go-Live</span><span class="stat-icon bg-success-subtle text-success"><i class="bi bi-check2-circle"></i></span></div>
+          <div class="stat-value mt-2" id="statLive">0</div><div class="stat-note">Berstatus production</div>
+        </div></div></div>
+        <div class="col-6 col-xl-3"><div class="card h-100"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="text-muted fw-semibold small">Belum Dimulai</span><span class="stat-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-hourglass-split"></i></span></div>
+          <div class="stat-value mt-2" id="statNew">0</div><div class="stat-note">Menunggu kick-off</div>
+        </div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+            <div><h2 class="h6 mb-1">Ringkasan Implementasi</h2><p class="text-muted small mb-0">Fasilitas yang terakhir diperbarui.</p></div>
+            <button class="btn btn-sm btn-outline-primary" data-goto="kanban"><i class="bi bi-kanban"></i> Buka Kanban</button>
+          </div>
+          <div class="table-responsive"><table class="table table-hover"><thead><tr><th>Fasilitas</th><th>Jenis</th><th>Tahapan</th><th>Kontak PIC</th><th>Update</th><th>Aksi</th></tr></thead><tbody id="overviewRows"></tbody></table></div>
+          <div class="empty hidden" id="overviewEmpty"><i class="bi bi-clipboard2-pulse"></i><strong>Belum ada data fasilitas</strong>Tambahkan fasilitas untuk mulai melacak implementasi.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-view" id="view-contacts">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+            <div><h2 class="h6 mb-1">Data Fasilitas Kesehatan</h2><p class="text-muted small mb-0">Kelola nama, jenis fasilitas, PIC, kontak, dan posisi implementasi.</p></div>
+            <div class="d-flex gap-2 flex-wrap align-items-center w-100" style="max-width:640px">
+              <div class="search"><i class="bi bi-search"></i><input id="searchInput" class="form-control" placeholder="Cari nama, PIC, kota..." /></div>
+              <select id="typeFilter" class="form-select" style="width:160px"><option value="">Semua jenis</option><option>Puskesmas</option><option>Klinik</option><option>Rumah Sakit</option><option>Labkesda</option><option>Labkesmas</option></select>
+              <select id="stageFilter" class="form-select" style="width:180px"><option value="">Semua tahapan</option></select>
+            </div>
+          </div>
+          <div class="table-responsive"><table class="table table-hover"><thead><tr><th>Fasilitas</th><th>Jenis</th><th>Lokasi</th><th>PIC / Kontak</th><th>Tahapan</th><th>Target Go-Live</th><th>Aksi</th></tr></thead><tbody id="contactRows"></tbody></table></div>
+          <div class="empty hidden" id="contactsEmpty"><i class="bi bi-search"></i><strong>Data tidak ditemukan</strong>Coba ubah kata kunci atau filter.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-view" id="view-kanban">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <div><h2 class="h6 mb-1">Pipeline Implementasi</h2><p class="text-muted small mb-0">Pindahkan kartu antar-tahapan dengan drag-and-drop, atau ubah status melalui menu edit.</p></div>
+        <div class="d-flex gap-2 flex-wrap"><button class="btn btn-outline-primary" id="kanbanAddStage"><i class="bi bi-plus-lg"></i> Tambah Tahapan</button><button class="btn btn-primary" id="kanbanAdd"><i class="bi bi-plus-lg"></i> Tambah Fasilitas</button></div>
+      </div>
+      <div class="kanban" id="kanbanBoard"></div>
+    </section>
+
+    <section class="content-view" id="view-templates">
+      <div class="alert alert-warning py-2 d-flex align-items-start gap-2" role="alert">
+        <i class="bi bi-info-circle-fill mt-1"></i>
+        <span>Template dapat disalin dan disesuaikan. Placeholder <b>@</b> akan diganti otomatis dengan nama fasilitas yang dipilih, misalnya Labkesda Ketapang, RS Sejahtera, Puskesmas Sukamaju, atau Klinik Sehat.</span>
+      </div>
+      <div class="templates-grid" id="templatesGrid"></div>
+    </section>
+
+    <section class="content-view" id="view-settings">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h2 class="h6 mb-1">Pengaturan Data Lokal</h2>
+          <p class="text-muted small mb-3">Data disimpan pada localStorage browser/perangkat yang sedang digunakan.</p>
+          <div class="alert alert-light border py-2 d-flex align-items-start gap-2 small">
+            <i class="bi bi-shield-check mt-1"></i>
+            <span>Tidak ada server atau akun yang digunakan. Data tidak otomatis tersinkron ke perangkat lain. Gunakan Export JSON sebagai cadangan berkala.</span>
+          </div>
+          <div class="d-flex gap-2 flex-wrap mb-4">
+            <button class="btn btn-outline-secondary" id="settingsExport"><i class="bi bi-filetype-json"></i> Unduh Cadangan JSON</button>
+            <button class="btn btn-outline-secondary" id="importBtn"><i class="bi bi-upload"></i> Import JSON</button>
+            <input class="hidden" type="file" id="importFile" accept=".json,application/json">
+          </div>
+          <div class="border-top pt-3">
+            <h3 class="h6 text-danger mb-1">Reset Seluruh Data</h3>
+            <p class="text-muted small mb-2" style="max-width:650px">Menghapus seluruh fasilitas yang tersimpan di browser ini dan mengembalikan aplikasi ke kondisi kosong. Tindakan ini tidak dapat dibatalkan. Export data terlebih dahulu jika masih diperlukan.</p>
+            <button class="btn btn-outline-danger" id="resetBtn"><i class="bi bi-trash3"></i> Reset ke Kondisi Awal</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+            <div><h2 class="h6 mb-1">Tahapan Pipeline</h2><p class="text-muted small mb-0">Urutan tahapan yang digunakan pada board Kanban. Tambah, edit, atau hapus tahapan sesuai kebutuhan tim.</p></div>
+            <button class="btn btn-primary btn-sm" id="addStageBtn"><i class="bi bi-plus-lg"></i> Tambah Tahapan</button>
+          </div>
+          <div id="stageList"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(() => {
+  const STORAGE_KEY = 'medicContactTracker_v1';
+  const STAGES_KEY = 'medicContactTracker_stages_v1';
+  const DEFAULT_STAGES = [
+    {id:'registered', label:'Terdaftar', color:'#8c9baa', desc:'Data fasilitas sudah dicatat'},
+    {id:'kickoff', label:'Kick-Off', color:'#4787d8', desc:'Koordinasi awal dan penyamaan alur'},
+    {id:'migration', label:'Migrasi Data', color:'#9a6ad5', desc:'Persiapan, validasi, dan migrasi data'},
+    {id:'training', label:'Training', color:'#d79532', desc:'Pelatihan pengguna aplikasi'},
+    {id:'monitoring', label:'Monitoring & Evaluasi', color:'#159d93', desc:'Pendampingan dan evaluasi pascapelatihan'},
+    {id:'live', label:'Go-Live / Production', color:'#2e9c5d', desc:'Sistem berjalan di production'}
+  ];
+  const STAGE_COLORS = ['#8c9baa','#4787d8','#9a6ad5','#d79532','#159d93','#2e9c5d','#d8566e','#e07a3f','#3b9fd8','#7a8f3d'];
+  const PROTECTED_STAGE_IDS = ['registered','live'];
+  const TYPES = ['Puskesmas','Klinik','Rumah Sakit','Labkesda','Labkesmas'];
+  const TYPE_ICONS = {'Puskesmas':'bi-hospital','Klinik':'bi-heart-pulse','Rumah Sakit':'bi-building','Labkesda':'bi-eyedropper','Labkesmas':'bi-shield-plus'};
+  const TEMPLATE_DATA = [
+    {id:'kickoff',title:'Sesi Kick-Off',desc:'Pembukaan grup dan koordinasi implementasi',icon:'bi-rocket-takeoff',text:'Selamat siang, Bapak/Ibu. 😊\n\nPerkenalkan, saya Arif dari tim Medisin. Kami mengucapkan terima kasih banyak karena Bapak/Ibu telah bergabung di Grup Implementasi MedisinLab – @. 👋🏻\n\nGrup ini akan menjadi forum koordinasi dan diskusi selama proses implementasi MedisinLab berlangsung.\n\nTim Medisin siap mendampingi dan membantu setiap tahapan implementasi, mulai dari proses migrasi, pelatihan, monitoring, hingga sistem dapat berjalan dengan baik.\n\nApabila terdapat pertanyaan, kendala, atau hal yang perlu didiskusikan selama proses implementasi, silakan disampaikan melalui grup ini.\n\nSemoga proses implementasi MedisinLab di @ dapat berjalan dengan lancar dan memberikan manfaat yang optimal.\n\nTerima kasih atas waktu dan kerja samanya, Bapak/Ibu. 🙏🏻😊'},
+    {id:'migration',title:'Follow Up — Migrasi Data',desc:'Memastikan progres penginputan dan kesiapan data',icon:'bi-database-check',text:'Selamat pagi Bapak/Ibu Tim @, izin follow up mengenai proses migrasi data. Mohon infonya apakah penginputan data telah selesai dilakukan? Jika ada kendala teknis maupun kendala pada format data, silakan diinfokan melalui grup ini. Terima kasih atas kerja samanya Bapak/Ibu semua 🙏😊'},
+    {id:'training',title:'Sesi Training',desc:'Konfirmasi kesiapan pelaksanaan pelatihan',icon:'bi-easel2',text:'Selamat pagi Bapak/Ibu Tim @, izin follow up terkait pelaksanaan Sesi Training Aplikasi RME MedisinLab. Mohon infonya apakah dari pihak @ telah siap mengikuti sesi pelatihan? Jika terdapat kendala teknis atau penyesuaian jadwal sebelum sesi dimulai, silakan diinfokan melalui grup ini. Terima kasih atas kerja samanya Bapak/Ibu semua 🙏😊'},
+    {id:'monitoring',title:'Monitoring & Evaluasi',desc:'Memantau penggunaan dan kendala setelah training',icon:'bi-clipboard2-check',text:'Selamat pagi Bapak/Ibu Tim @, izin follow up terkait proses monitoring dan evaluasi penggunaan aplikasi MedisinLab. Mohon informasinya apakah aplikasi sudah digunakan sesuai alur kerja dan apakah terdapat kendala yang perlu kami tindak lanjuti? Silakan sampaikan kendala, masukan, atau kebutuhan pendampingan melalui grup ini. Terima kasih atas kerja samanya Bapak/Ibu semua 🙏😊'},
+    {id:'live',title:'Persiapan Go-Live',desc:'Konfirmasi kesiapan menuju production',icon:'bi-check2-circle',text:'Selamat pagi Bapak/Ibu Tim @, izin follow up terkait persiapan Go-Live aplikasi MedisinLab. Mohon konfirmasi apakah data, akun pengguna, dan alur kerja utama telah siap digunakan di lingkungan production. Jika masih terdapat kendala atau hal yang perlu diverifikasi sebelum Go-Live, silakan diinformasikan melalui grup ini agar dapat kami tindak lanjuti bersama. Terima kasih atas kerja samanya Bapak/Ibu semua 🙏😊'}
+  ];
+  const $ = id => document.getElementById(id);
+  let facilities = loadData();
+  let stages = loadStages();
+  let activeView = 'overview';
+  let draggedId = null;
+
+  function loadData(){ try { const raw=localStorage.getItem(STORAGE_KEY); const parsed=raw?JSON.parse(raw):[]; return Array.isArray(parsed)?parsed:[]; } catch(e){ return []; } }
+  function persist(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(facilities)); renderAll(); }
+  function loadStages(){
+    try {
+      const raw=localStorage.getItem(STAGES_KEY);
+      const parsed=raw?JSON.parse(raw):null;
+      if(Array.isArray(parsed)&&parsed.length){
+        const cleaned=parsed.filter(s=>s&&s.id&&s.label).map(s=>({id:String(s.id),label:String(s.label),color:/^#[0-9a-fA-F]{6}$/.test(s.color||'')?s.color:'#8c9baa',desc:String(s.desc||'')}));
+        if(cleaned.length)return cleaned;
+      }
+    } catch(e){}
+    return DEFAULT_STAGES.map(s=>({...s}));
+  }
+  function persistStages(){ localStorage.setItem(STAGES_KEY,JSON.stringify(stages)); renderStageFilter(); renderAll(); }
+  function stage(id){return stages.find(s=>s.id===id)||stages[0];}
+  function stageIdExists(id){return stages.some(s=>s.id===id);}
+  function newStageId(label){
+    const base=String(label||'tahapan').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'tahapan';
+    let id=base,n=2;
+    while(stageIdExists(id)){id=base+'-'+n++;}
+    return id;
+  }
+  function uid(){ return 'fac-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8); }
+  function escapeHtml(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function dateText(value){if(!value)return '—';const d=new Date(value+'T00:00:00');return isNaN(d)?'—':d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});}
+  function todayISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+  function latestDate(f){return f.updatedAt||f.createdAt||'';}
+  function typeIcon(type){return TYPE_ICONS[type]||'bi-hospital';}
+  function closeSidebarMobile(){ if(window.innerWidth<992) document.body.classList.remove('sidebar-open'); }
+  function setView(view){
+    activeView=view;
+    document.querySelectorAll('.content-view').forEach(el=>el.classList.toggle('active',el.id==='view-'+view));
+    document.querySelectorAll('.nav-item[data-view]').forEach(el=>el.classList.toggle('active',el.dataset.view===view));
+    const meta={
+      overview:['Overview','Pantau perjalanan implementasi fasilitas kesehatan dari terdaftar hingga go-live.'],
+      contacts:['Data Fasilitas','Satu daftar terpusat untuk seluruh kontak implementasi.'],
+      kanban:['Pipeline Kanban','Kelola progres implementasi secara visual dari satu tahapan ke tahapan berikutnya.'],
+      templates:['Template Pesan','Pesan follow-up siap salin untuk mempercepat komunikasi implementasi.'],
+      settings:['Pengaturan Data','Kelola cadangan, impor, dan reset data lokal aplikasi.']
+    }[view];
+    $('pageTitle').textContent=meta[0];$('pageSubtitle').textContent=meta[1];
+    $('addBtn').classList.toggle('hidden',view==='templates'||view==='settings');
+    $('bulkBtn').classList.toggle('hidden',view==='templates'||view==='settings');
+    closeSidebarMobile();
+    renderAll();
+  }
+  function facilityCell(f){return `<div class="facility"><div class="facility-icon"><i class="bi ${typeIcon(f.type)}"></i></div><div><div class="facility-name">${escapeHtml(f.name)}</div><div class="facility-sub">${escapeHtml(f.code||'Belum ada kode')}</div></div></div>`;}
+  function statusPill(f){const s=stage(f.stage);return `<span class="status-pill"><span style="width:6px;height:6px;background:${s.color};border-radius:50%"></span>${escapeHtml(s.label)}</span>`;}
+  function actions(f){return `<div class="row-actions"><button class="icon-btn" title="Salin template" onclick="window.copyFacilityMessage('${f.id}')"><i class="bi bi-chat-left-text"></i></button><button class="icon-btn" title="Edit" onclick="window.editFacility('${f.id}')"><i class="bi bi-pencil"></i></button><button class="icon-btn" title="Hapus" onclick="window.deleteFacility('${f.id}')"><i class="bi bi-trash3"></i></button></div>`;}
+  function renderStats(){
+    $('statTotal').textContent=facilities.length;
+    $('statActive').textContent=facilities.filter(f=>!['registered','live'].includes(f.stage)).length;
+    $('statLive').textContent=facilities.filter(f=>f.stage==='live').length;
+    $('statNew').textContent=facilities.filter(f=>f.stage==='registered').length;
+  }
+  function renderOverview(){
+    const rows=[...facilities].sort((a,b)=>latestDate(b).localeCompare(latestDate(a))).slice(0,7);
+    $('overviewRows').innerHTML=rows.map(f=>`<tr><td>${facilityCell(f)}</td><td><span class="type-pill">${escapeHtml(f.type)}</span></td><td>${statusPill(f)}</td><td>${escapeHtml(f.pic||'—')}<div class="facility-sub">${escapeHtml(f.phone||f.email||'')}</div></td><td>${dateText(latestDate(f))}</td><td>${actions(f)}</td></tr>`).join('');
+    $('overviewEmpty').classList.toggle('hidden',rows.length>0);
+  }
+  function renderContacts(){
+    const q=$('searchInput').value.toLowerCase().trim(),type=$('typeFilter').value,st=$('stageFilter').value;
+    const filtered=facilities.filter(f=>(!q||[f.name,f.pic,f.phone,f.email,f.city,f.province,f.code].some(v=>(v||'').toLowerCase().includes(q)))&&(!type||f.type===type)&&(!st||f.stage===st)).sort((a,b)=>a.name.localeCompare(b.name));
+    $('contactRows').innerHTML=filtered.map(f=>`<tr><td>${facilityCell(f)}</td><td><span class="type-pill">${escapeHtml(f.type)}</span></td><td>${escapeHtml([f.city,f.province].filter(Boolean).join(', ')||'—')}</td><td>${escapeHtml(f.pic||'—')}<div class="facility-sub">${escapeHtml(f.phone||'')}${f.email?' · '+escapeHtml(f.email):''}</div></td><td>${statusPill(f)}</td><td>${dateText(f.goLiveDate)}</td><td>${actions(f)}</td></tr>`).join('');
+    $('contactsEmpty').classList.toggle('hidden',filtered.length>0);
+  }
+  function renderKanban(){
+    document.documentElement.style.setProperty('--kanban-cols',stages.length);
+    $('kanbanBoard').innerHTML=stages.map(s=>{
+      const items=facilities.filter(f=>f.stage===s.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+      return `<div class="kanban-col" data-stage="${s.id}"><div class="kanban-col-head"><div class="kanban-col-title"><span class="stage-dot" style="background:${s.color}"></span>${escapeHtml(s.label)}</div><span class="stage-count">${items.length}</span></div><div class="kanban-cards" data-drop="${s.id}">${items.map(f=>`<article class="kanban-card" draggable="true" data-id="${f.id}"><div class="card-top"><div class="card-name">${escapeHtml(f.name)}</div><span class="card-type">${escapeHtml(f.type)}</span></div><div class="card-location"><i class="bi bi-geo-alt"></i>${escapeHtml([f.city,f.province].filter(Boolean).join(', ')||'Lokasi belum diisi')}</div>${f.pic?`<div class="card-contact"><i class="bi bi-person"></i> ${escapeHtml(f.pic)}</div>`:''}${f.phone?`<div class="card-contact"><i class="bi bi-telephone"></i> ${escapeHtml(f.phone)}</div>`:''}<div class="card-foot"><span class="card-date">${f.goLiveDate?'Target '+dateText(f.goLiveDate):'Update '+dateText(latestDate(f))}</span><div class="card-actions"><button title="Salin pesan" onclick="window.copyFacilityMessage('${f.id}')"><i class="bi bi-chat-left-text"></i></button><button title="Edit" onclick="window.editFacility('${f.id}')"><i class="bi bi-pencil"></i></button><button title="Hapus" onclick="window.deleteFacility('${f.id}')"><i class="bi bi-trash3"></i></button></div></div></article>`).join('')}</div></div>`;
+    }).join('');
+    document.querySelectorAll('.kanban-card').forEach(card=>{
+      card.addEventListener('dragstart',e=>{draggedId=card.dataset.id;e.dataTransfer.setData('text/plain',draggedId);e.dataTransfer.effectAllowed='move';});
+      card.addEventListener('dragend',()=>{draggedId=null;document.querySelectorAll('.kanban-col').forEach(c=>c.classList.remove('drag-over'));});
+    });
+    document.querySelectorAll('.kanban-col').forEach(col=>{
+      col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('drag-over');});
+      col.addEventListener('dragleave',e=>{if(!col.contains(e.relatedTarget))col.classList.remove('drag-over');});
+      col.addEventListener('drop',e=>{e.preventDefault();col.classList.remove('drag-over');const id=e.dataTransfer.getData('text/plain')||draggedId;const f=facilities.find(x=>x.id===id);if(f&&f.stage!==col.dataset.stage){f.stage=col.dataset.stage;f.updatedAt=todayISO();persist();toast('Tahapan berhasil diperbarui.');}});
+    });
+  }
+  function renderTemplates(){
+    $('templatesGrid').innerHTML=TEMPLATE_DATA.map(t=>`<article class="card"><div class="card-body"><div class="template-top"><div class="d-flex gap-2"><div class="template-icon"><i class="bi ${t.icon}"></i></div><div><h3 class="h6 mb-0">${escapeHtml(t.title)}</h3><div class="text-muted small">${escapeHtml(t.desc)}</div></div></div><button class="btn btn-sm btn-outline-primary" onclick="window.copyTemplate('${t.id}')"><i class="bi bi-copy"></i> Salin</button></div><div class="template-body">${escapeHtml(t.text)}</div></div></article>`).join('');
+  }
+  function renderSettings(){
+    $('stageList').innerHTML=stages.map((s,i)=>{
+      const usage=facilities.filter(f=>f.stage===s.id).length;
+      return `<div class="d-flex align-items-center gap-3 py-2 border-bottom">
+        <span class="rounded d-inline-grid align-items-center justify-content-center bg-light text-muted fw-bold" style="width:28px;height:28px;font-size:.7rem;flex-shrink:0">${i+1}</span>
+        <span class="rounded-circle flex-shrink-0" style="width:9px;height:9px;background:${s.color}"></span>
+        <div class="flex-grow-1" style="min-width:0"><strong style="font-size:.8125rem">${escapeHtml(s.label)}</strong><div class="text-muted" style="font-size:.72rem;margin-top:2px">${escapeHtml(s.desc||'—')}${usage?` · <span class="text-primary">${usage} fasilitas</span>`:''}</div></div>
+        <div class="row-actions flex-shrink-0">
+          <button class="icon-btn" title="Edit tahapan" onclick="window.editStage('${s.id}')"><i class="bi bi-pencil"></i></button>
+          <button class="icon-btn" title="Hapus tahapan" onclick="window.deleteStage('${s.id}')"><i class="bi bi-trash3"></i></button>
+        </div>
+      </div>`;
+    }).join('') || `<div class="empty" style="padding:1.5rem"><strong>Belum ada tahapan</strong>Tambahkan tahapan pipeline terlebih dahulu.</div>`;
+  }
+  async function openStageForm(existing=null){
+    const s=existing||{label:'',color:STAGE_COLORS[stages.length%STAGE_COLORS.length],desc:''};
+    const result=await Swal.fire({
+      title:existing?'Edit Tahapan':'Tambah Tahapan Pipeline',width:520,confirmButtonText:existing?'Simpan Perubahan':'Tambah Tahapan',showCancelButton:true,cancelButtonText:'Batal',focusConfirm:false,
+      html:`<div class="row text-start mt-2">
+        <div class="col-12 mb-3"><label for="sLabel" class="form-label">Nama tahapan *</label><input id="sLabel" class="form-control" value="${escapeHtml(s.label)}" placeholder="Contoh: Persiapan Kontrak"></div>
+        <div class="col-12 mb-3"><label for="sDesc" class="form-label">Deskripsi singkat</label><input id="sDesc" class="form-control" value="${escapeHtml(s.desc||'')}" placeholder="Contoh: Review dokumen dan penandatanganan"></div>
+        <div class="col-12 mb-2"><label for="sColor" class="form-label">Warna penanda</label><select id="sColor" class="form-select">${STAGE_COLORS.map(c=>`<option value="${c}" ${s.color===c?'selected':''}>■ ${c}</option>`).join('')}</select></div>
+      </div><div class="text-start form-text">Tahapan baru akan ditambahkan setelah tahapan terakhir pada board Kanban.</div>`,
+      preConfirm:()=>{
+        const label=$('sLabel').value.trim();
+        if(!label){Swal.showValidationMessage('Nama tahapan wajib diisi.');return false;}
+        if(stages.some(x=>x.label.toLowerCase()===label.toLowerCase()&&x!==existing)){Swal.showValidationMessage('Nama tahapan sudah digunakan.');return false;}
+        return {label,color:$('sColor').value,desc:$('sDesc').value.trim()};
+      }
+    });
+    if(!result.isConfirmed)return;
+    if(existing){Object.assign(existing,result.value);}
+    else{stages.push({id:newStageId(result.value.label),...result.value});}
+    persistStages();toast(existing?'Tahapan diperbarui.':'Tahapan pipeline ditambahkan.');
+  }
+  window.editStage=id=>{const s=stages.find(x=>x.id===id);if(s)openStageForm(s);};
+  window.deleteStage=async id=>{
+    const s=stages.find(x=>x.id===id);if(!s)return;
+    const usage=facilities.filter(f=>f.stage===id).length;
+    if(PROTECTED_STAGE_IDS.includes(id)){Swal.fire({icon:'info',title:'Tahapan bawaan',text:'Tahapan bawaan aplikasi tidak dapat dihapus.'});return;}
+    if(stages.length<=1){Swal.fire({icon:'info',title:'Minimal satu tahapan',text:'Board Kanban membutuhkan setidaknya satu tahapan.'});return;}
+    let moveTarget='';
+    const others=stages.filter(x=>x.id!==id);
+    const res=await Swal.fire({
+      title:'Hapus tahapan?',icon:'warning',showCancelButton:true,confirmButtonText:'Ya, hapus',cancelButtonText:'Batal',confirmButtonColor:'#dc3545',
+      html:`<div class="text-start">Tahapan <b>${escapeHtml(s.label)}</b> akan dihapus dari pipeline.${usage?`<div class="mt-3"><label for="sMove" class="form-label">${usage} fasilitas berada di tahapan ini. Pindahkan ke:</label><select id="sMove" class="form-select">${others.map(o=>`<option value="${o.id}">${escapeHtml(o.label)}</option>`).join('')}</select></div>`:''}</div>`,
+      preConfirm:()=>{moveTarget=$('sMove')?$('sMove').value:'';return true;}
+    });
+    if(!res.isConfirmed)return;
+    if(usage&&moveTarget){facilities.forEach(f=>{if(f.stage===id){f.stage=moveTarget;f.updatedAt=todayISO();}});localStorage.setItem(STORAGE_KEY,JSON.stringify(facilities));}
+    stages=stages.filter(x=>x.id!==id);
+    persistStages();toast('Tahapan pipeline dihapus.');
+  };
+  function renderAll(){renderStats();renderOverview();renderContacts();renderKanban();renderTemplates();renderSettings();}
+  function toast(message){Swal.fire({toast:true,position:'top-end',icon:'success',title:message,showConfirmButton:false,timer:2200,timerProgressBar:true});}
+  function fieldHtml(id,label,value='',type='text',placeholder='',required=false,span=false){return `<div class="mb-3 ${span?'col-12':'col-md-6'}"><label for="${id}" class="form-label">${label}${required?' *':''}</label><input id="${id}" type="${type}" class="form-control" value="${escapeHtml(value||'')}" placeholder="${escapeHtml(placeholder)}"></div>`;}
+  function selectHtml(id,label,options,required=false){return `<div class="mb-3 col-md-6"><label for="${id}" class="form-label">${label}${required?' *':''}</label><select id="${id}" class="form-select">${options}</select></div>`;}
+  async function openFacilityForm(existing=null){
+    const f=existing||{name:'',type:'Labkesda',stage:'registered',code:'',pic:'',phone:'',email:'',city:'',province:'',address:'',groupLink:'',startDate:todayISO(),goLiveDate:'',notes:''};
+    const stageOptions=stages.map(s=>`<option value="${s.id}" ${f.stage===s.id?'selected':''}>${escapeHtml(s.label)}</option>`).join('');
+    const typeOptions=TYPES.map(t=>`<option value="${t}" ${f.type===t?'selected':''}>${t}</option>`).join('');
+    const TOTAL=3;
+    let step=1;
+    const stepLabels=['Identitas','Kontak & Lokasi','Jadwal & Detail'];
+    const stepDots=stepLabels.map((lbl,i)=>`${i?`<div class="wizard-connector" data-conn="${i}"></div>`:''}<div class="wizard-step-dot" data-dot="${i+1}"><span class="num">${i+1}</span><span class="lbl">${lbl}</span></div>`).join('');
+    const result=await Swal.fire({
+      title:existing?'Edit Fasilitas':'Tambah Fasilitas',width:680,confirmButtonText:'Selanjutnya',showDenyButton:true,denyButtonText:'Kembali',showCancelButton:true,cancelButtonText:'Batal',focusConfirm:false,
+      html:`<div>
+        <div class="wizard-steps">${stepDots}</div>
+        <div class="wizard-panel active text-start" data-panel="1">
+          <div class="row g-0">
+            ${fieldHtml('fName','Nama fasilitas',f.name,'text','Contoh: Labkesda Ketapang',true,true)}
+            ${selectHtml('fType','Jenis fasilitas',typeOptions,true)}
+            ${selectHtml('fStage','Tahapan implementasi',stageOptions,true)}
+            ${fieldHtml('fCode','Kode / label internal',f.code,'text','Contoh: LAB-KTP',false,true)}
+          </div>
+        </div>
+        <div class="wizard-panel text-start" data-panel="2">
+          <div class="row g-0">
+            ${fieldHtml('fPic','Nama PIC',f.pic,'text','Nama penanggung jawab')}
+            ${fieldHtml('fPhone','Nomor WhatsApp / telepon',f.phone,'tel','08xxxxxxxxxx')}
+            ${fieldHtml('fEmail','Email',f.email,'email','nama@instansi.go.id')}
+            ${fieldHtml('fCity','Kabupaten / kota',f.city,'text','Contoh: Ketapang')}
+            ${fieldHtml('fProvince','Provinsi',f.province,'text','Contoh: Kalimantan Barat')}
+          </div>
+        </div>
+        <div class="wizard-panel text-start" data-panel="3">
+          <div class="row g-0">
+            ${fieldHtml('fStart','Tanggal mulai',f.startDate,'date')}
+            ${fieldHtml('fLive','Target Go-Live',f.goLiveDate,'date')}
+            ${fieldHtml('fGroup','Link grup koordinasi',f.groupLink,'url','https://chat.whatsapp.com/... ',false,true)}
+            <div class="mb-2 col-12"><label for="fAddress" class="form-label">Alamat</label><input id="fAddress" class="form-control" value="${escapeHtml(f.address)}" placeholder="Alamat fasilitas"></div>
+            <div class="mb-1 col-12"><label for="fNotes" class="form-label">Catatan implementasi</label><textarea id="fNotes" class="form-control" rows="3" placeholder="Progress, kendala, tindak lanjut, jadwal...">${escapeHtml(f.notes)}</textarea></div>
+          </div>
+        </div>
+        <div class="form-text mt-2">Langkah <span id="wStepNow">${step}</span> dari ${TOTAL} · * Wajib diisi. Data disimpan di browser ini.</div>
+      </div>`,
+      didOpen:()=>updateWizard(),
+      preDeny:()=>{
+        if(step>1){step--;updateWizard();}
+        return false;
+      },
+      preConfirm:()=>{
+        if(step===1){
+          const name=$('fName').value.trim();
+          if(!name){Swal.showValidationMessage('Nama fasilitas wajib diisi.');return false;}
+        }
+        if(step===2){
+          const phone=$('fPhone').value.trim(),email=$('fEmail').value.trim();
+          if(phone&&!/^[0-9+()\-\s]{6,20}$/.test(phone)){Swal.showValidationMessage('Format nomor telepon tidak valid.');return false;}
+          if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){Swal.showValidationMessage('Format email tidak valid.');return false;}
+        }
+        if(step===3){
+          const start=$('fStart').value,live=$('fLive').value;
+          if(start&&live&&live<start){Swal.showValidationMessage('Target Go-Live tidak boleh sebelum tanggal mulai.');return false;}
+        }
+        if(step<TOTAL){step++;updateWizard();return false;}
+        return {name:$('fName').value.trim(),type:$('fType').value,stage:$('fStage').value,code:$('fCode').value.trim(),pic:$('fPic').value.trim(),phone:$('fPhone').value.trim(),email:$('fEmail').value.trim(),city:$('fCity').value.trim(),province:$('fProvince').value.trim(),startDate:$('fStart').value,goLiveDate:$('fLive').value,groupLink:$('fGroup').value.trim(),address:$('fAddress').value.trim(),notes:$('fNotes').value.trim()};
+      }
+    });
+    function updateWizard(){
+      document.querySelectorAll('.wizard-panel').forEach(p=>p.classList.toggle('active',Number(p.dataset.panel)===step));
+      document.querySelectorAll('.wizard-step-dot').forEach(d=>{
+        const n=Number(d.dataset.dot);
+        d.classList.toggle('active',n===step);
+        d.classList.toggle('done',n<step);
+      });
+      document.querySelectorAll('.wizard-connector').forEach(c=>{const n=Number(c.dataset.conn);c.classList.toggle('done',n<step);});
+      const now=$('wStepNow');if(now)now.textContent=step;
+      const popup=Swal.getPopup();
+      popup.querySelector('.swal2-confirm').textContent=step<TOTAL?'Selanjutnya':(existing?'Simpan Perubahan':'Simpan Fasilitas');
+      const deny=popup.querySelector('.swal2-deny');
+      deny.style.display=step>1?'':'none';
+      const first=popup.querySelector(`.wizard-panel.active input, .wizard-panel.active select, .wizard-panel.active textarea`);
+      if(first)setTimeout(()=>first.focus(),50);
+    }
+    if(!result.isConfirmed)return;
+    const now=todayISO();
+    if(existing){Object.assign(existing,result.value,{updatedAt:now});}
+    else{facilities.push({id:uid(),...result.value,createdAt:now,updatedAt:now});}
+    persist();toast(existing?'Data fasilitas diperbarui.':'Fasilitas berhasil ditambahkan.');
+  }
+  function bulkRowHtml(vals={}){
+    const typeOpts=TYPES.map(t=>`<option value="${t}" ${(vals.type||'Labkesda')===t?'selected':''}>${t}</option>`).join('');
+    const stageOpts=stages.map(s=>`<option value="${s.id}" ${(vals.stage||stages[0].id)===s.id?'selected':''}>${escapeHtml(s.label)}</option>`).join('');
+    return `<div class="bulk-row row g-2 align-items-end" data-bulk-row>
+      <div class="col-12 col-md-3"><label class="form-label">Nama fasilitas *</label><input class="form-control" data-b="name" value="${escapeHtml(vals.name||'')}" placeholder="Labkesda Ketapang"></div>
+      <div class="col-6 col-md-2"><label class="form-label">Jenis</label><select class="form-select" data-b="type">${typeOpts}</select></div>
+      <div class="col-6 col-md-2"><label class="form-label">Tahapan</label><select class="form-select" data-b="stage">${stageOpts}</select></div>
+      <div class="col-6 col-md-2"><label class="form-label">Kota</label><input class="form-control" data-b="city" value="${escapeHtml(vals.city||'')}" placeholder="Ketapang"></div>
+      <div class="col-4 col-md-2"><label class="form-label">PIC</label><input class="form-control" data-b="pic" value="${escapeHtml(vals.pic||'')}" placeholder="Nama PIC"></div>
+      <div class="col-2 col-md-1 text-end"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-bulk-remove title="Hapus baris"><i class="bi bi-x-lg"></i></button></div>
+      <div class="col-12 col-md-11 offset-md-1"><input class="form-control form-control-sm" data-b="phone" value="${escapeHtml(vals.phone||'')}" placeholder="Telepon (opsional)"></div>
+    </div>`;
+  }
+  async function openBulkForm(){
+    const result=await Swal.fire({
+      title:'Bulk Input Fasilitas',width:920,confirmButtonText:'Simpan Semua',showCancelButton:true,cancelButtonText:'Batal',focusConfirm:false,
+      html:`<div class="text-start">
+        <p class="text-muted small mb-3">Isi beberapa fasilitas sekaligus dalam satu kali simpan. Baris yang namanya kosong akan diabaikan.</p>
+        <div id="bulkRows" class="bulk-scroll d-grid gap-2">
+          ${bulkRowHtml()}${bulkRowHtml()}${bulkRowHtml()}${bulkRowHtml()}${bulkRowHtml()}
+        </div>
+        <button type="button" class="btn btn-outline-primary btn-sm mt-3" id="bulkAddRow"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
+        <div class="form-text mt-2">Tanggal mulai otomatis diisi hari ini. Lengkapi detail lain (alamat, email, target go-live, dll.) lewat menu Edit setelah disimpan.</div>
+      </div>`,
+      didOpen:()=>{
+        $('bulkAddRow').addEventListener('click',()=>{
+          const last=$('bulkRows').querySelectorAll('[data-bulk-row]');
+          const prev=last[last.length-1];
+          const vals=prev?{type:prev.querySelector('[data-b="type"]').value,stage:prev.querySelector('[data-b="stage"]').value}:{};
+          $('bulkRows').insertAdjacentHTML('beforeend',bulkRowHtml(vals));
+          const rows=$('bulkRows').querySelectorAll('[data-bulk-row]');
+          rows[rows.length-1].querySelector('[data-b="name"]').focus();
+        });
+        $('bulkRows').addEventListener('click',e=>{
+          const rm=e.target.closest('[data-bulk-remove]');
+          if(!rm)return;
+          const rows=$('bulkRows').querySelectorAll('[data-bulk-row]');
+          if(rows.length<=1){Swal.showValidationMessage('Minimal satu baris harus ada.');return;}
+          rm.closest('[data-bulk-row]').remove();
+        });
+      },
+      preConfirm:()=>{
+        const rows=[...$('bulkRows').querySelectorAll('[data-bulk-row]')].map(r=>({
+          name:r.querySelector('[data-b="name"]').value.trim(),
+          type:r.querySelector('[data-b="type"]').value,
+          stage:r.querySelector('[data-b="stage"]').value,
+          city:r.querySelector('[data-b="city"]').value.trim(),
+          pic:r.querySelector('[data-b="pic"]').value.trim(),
+          phone:r.querySelector('[data-b="phone"]').value.trim()
+        })).filter(r=>r.name||r.city||r.pic||r.phone);
+        if(!rows.length){Swal.showValidationMessage('Minimal satu baris harus diisi.');return false;}
+        const noName=rows.find(r=>!r.name);
+        if(noName){Swal.showValidationMessage('Setiap baris yang terisi wajib memiliki nama fasilitas.');return false;}
+        return rows;
+      }
+    });
+    if(!result.isConfirmed)return;
+    const now=todayISO();
+    result.value.forEach(r=>{
+      facilities.push({id:uid(),name:r.name,type:r.type,stage:r.stage,code:'',pic:r.pic,phone:r.phone,email:'',city:r.city,province:'',startDate:now,goLiveDate:'',groupLink:'',address:'',notes:'',createdAt:now,updatedAt:now});
+    });
+    persist();toast(`${result.value.length} fasilitas berhasil ditambahkan.`);
+  }
+  window.editFacility=id=>{const f=facilities.find(x=>x.id===id);if(f)openFacilityForm(f);};
+  window.deleteFacility=async id=>{const f=facilities.find(x=>x.id===id);if(!f)return;const res=await Swal.fire({title:'Hapus fasilitas?',html:`Data <b>${escapeHtml(f.name)}</b> akan dihapus dari browser ini.`,icon:'warning',showCancelButton:true,confirmButtonText:'Ya, hapus',cancelButtonText:'Batal',confirmButtonColor:'#dc3545'});if(res.isConfirmed){facilities=facilities.filter(x=>x.id!==id);persist();toast('Fasilitas dihapus.');}};
+  function getTemplateText(templateId,name){
+    const t=TEMPLATE_DATA.find(x=>x.id===templateId)||TEMPLATE_DATA[0];
+    return t.text.replace(/@/g, name || '[Nama Fasilitas]');
+  }
+  window.copyTemplate=async id=>{
+    const choices=facilities.map(f=>`<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)} — ${escapeHtml(f.type)}</option>`).join('');
+    const res=await Swal.fire({title:'Salin Template Pesan',html:`<div class="text-start mt-2"><label for="templateFacility" class="form-label">Nama fasilitas</label><select id="templateFacility" class="form-select"><option value="">Pilih fasilitas (opsional)</option>${choices}</select><div class="form-text">Setiap tanda @ akan diganti dengan nama fasilitas yang dipilih, apa pun jenisnya: Labkesda, Labkesmas, Rumah Sakit, Puskesmas, atau Klinik.</div></div>`,showCancelButton:true,confirmButtonText:'Lanjutkan',cancelButtonText:'Batal',preConfirm:()=>$('templateFacility').value});
+    if(!res.isConfirmed)return;
+    const text=getTemplateText(id,res.value);
+    const copied=await copyText(text);
+    if(copied)toast('Template berhasil disalin.');else Swal.fire({icon:'info',title:'Template siap disalin',input:'textarea',inputValue:text,inputAttributes:{'aria-label':'Teks template'},confirmButtonText:'Tutup'});
+  };
+  window.copyFacilityMessage=async id=>{
+    const f=facilities.find(x=>x.id===id);if(!f)return;
+    const known={'registered':'kickoff','kickoff':'kickoff','migration':'migration','training':'training','monitoring':'monitoring','live':'live'};
+    let relevant=known[f.stage];
+    if(!relevant){
+      const i=stages.findIndex(s=>s.id===f.stage),last=Math.max(1,stages.length-1);
+      relevant=i<=0?'kickoff':i>=stages.length-1?'live':TEMPLATE_DATA[Math.min(TEMPLATE_DATA.length-1,Math.max(0,Math.round(i/last*(TEMPLATE_DATA.length-1))))].id;
+    }
+    const opts=TEMPLATE_DATA.map(t=>`<option value="${t.id}" ${t.id===relevant?'selected':''}>${escapeHtml(t.title)}</option>`).join('');
+    const res=await Swal.fire({title:'Buat Pesan Follow-Up',html:`<div class="text-start mt-2"><label for="msgTemplate" class="form-label">Jenis pesan</label><select id="msgTemplate" class="form-select">${opts}</select><label for="msgPreview" class="form-label mt-3">Pratinjau pesan</label><textarea id="msgPreview" class="form-control" style="min-height:230px">${escapeHtml(getTemplateText(relevant,f.name))}</textarea></div>`,showCancelButton:true,confirmButtonText:'Salin Pesan',cancelButtonText:'Tutup',didOpen:()=>{$('msgTemplate').addEventListener('change',()=>{$('msgPreview').value=getTemplateText($('msgTemplate').value,f.name);});},preConfirm:()=>$('msgPreview').value});
+    if(res.isConfirmed){const ok=await copyText(res.value);if(ok)toast('Pesan disalin. Siap ditempel ke grup koordinasi.');else Swal.fire({title:'Salin pesan secara manual',input:'textarea',inputValue:res.value,confirmButtonText:'Tutup'});}
+  };
+  async function copyText(text){try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true;}}catch(e){}try{const el=document.createElement('textarea');el.value=text;el.style.position='fixed';el.style.opacity='0';document.body.appendChild(el);el.select();const ok=document.execCommand('copy');el.remove();return ok;}catch(e){return false;}}
+  function exportJson(){const blob=new Blob([JSON.stringify({app:'Medic Contact Tracker — By Itsmebroarif',version:1,exportedAt:new Date().toISOString(),stages,facilities},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`medic-contact-tracker-${todayISO()}.json`;a.click();URL.revokeObjectURL(url);toast('Cadangan JSON diunduh.');}
+  function validStageList(list){
+    if(!Array.isArray(list)||!list.length)return null;
+    const cleaned=list.filter(s=>s&&s.id&&s.label).map(s=>({id:String(s.id),label:String(s.label),color:/^#[0-9a-fA-F]{6}$/.test(s.color||'')?s.color:'#8c9baa',desc:String(s.desc||'')}));
+    if(!cleaned.length)return null;
+    const seen=new Set();
+    cleaned.forEach(s=>{if(seen.has(s.id))s.id=newStageId(s.label);seen.add(s.id);});
+    return cleaned;
+  }
+  async function importJson(file){
+    try{const parsed=JSON.parse(await file.text());const list=Array.isArray(parsed)?parsed:parsed.facilities;if(!Array.isArray(list))throw new Error('Format JSON tidak berisi daftar facilities.');if(list.some(f=>!f||typeof f.name!=='string'))throw new Error('Ada data fasilitas dengan format tidak valid.');
+      const incomingStages=validStageList(parsed&&!Array.isArray(parsed)?parsed.stages:null);
+      const pool=incomingStages||stages;
+      const res=await Swal.fire({title:'Import data?',text:`${list.length} data fasilitas akan menggantikan data lokal saat ini.${incomingStages?` Daftar tahapan (${incomingStages.length}) juga akan dipulihkan.`:''}`,icon:'question',showCancelButton:true,confirmButtonText:'Import dan Ganti Data',cancelButtonText:'Batal'});
+      if(res.isConfirmed){
+        if(incomingStages){stages=incomingStages;localStorage.setItem(STAGES_KEY,JSON.stringify(stages));}
+        facilities=list.map(f=>({...f,id:f.id||uid(),type:TYPES.includes(f.type)?f.type:'Labkesda',stage:pool.some(s=>s.id===f.stage)?f.stage:pool[0].id,updatedAt:f.updatedAt||todayISO()}));
+        persist();renderStageFilter();toast('Data berhasil diimpor.');
+      }
+    }catch(e){Swal.fire({icon:'error',title:'Import gagal',text:e.message||'File tidak dapat dibaca.'});}
+    $('importFile').value='';
+  }
+  async function resetAll(){const first=await Swal.fire({title:'Reset seluruh data?',html:'Semua data fasilitas pada browser ini akan dihapus dan tahapan pipeline dikembalikan ke bawaan.<br><b>Tindakan ini tidak dapat dibatalkan.</b>',icon:'warning',showCancelButton:true,confirmButtonText:'Lanjutkan',cancelButtonText:'Batal',confirmButtonColor:'#dc3545'});if(!first.isConfirmed)return;const second=await Swal.fire({title:'Konfirmasi terakhir',text:'Ketik RESET untuk mengosongkan seluruh data.',input:'text',inputPlaceholder:'Ketik RESET',showCancelButton:true,confirmButtonText:'Hapus Semua Data',cancelButtonText:'Batal',confirmButtonColor:'#dc3545',inputValidator:v=>v==='RESET'?undefined:'Ketik RESET dengan huruf kapital untuk melanjutkan.'});if(second.isConfirmed){facilities=[];stages=DEFAULT_STAGES.map(s=>({...s}));localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(STAGES_KEY);persist();renderStageFilter();setView('overview');Swal.fire({icon:'success',title:'Data berhasil direset',text:'Medic Contact Tracker kembali kosong dan siap digunakan dari awal.'});}}
+
+  document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',e=>{e.preventDefault();setView(btn.dataset.view);}));
+  document.querySelectorAll('[data-goto]').forEach(btn=>btn.addEventListener('click',()=>setView(btn.dataset.goto)));
+  $('sidebarToggle').addEventListener('click',()=>{
+    if(window.innerWidth<992){document.body.classList.toggle('sidebar-open');}
+    else{document.body.classList.toggle('sidebar-collapsed');}
+  });
+  $('sidebarOverlay').addEventListener('click',()=>document.body.classList.remove('sidebar-open'));
+  $('addBtn').addEventListener('click',()=>openFacilityForm());$('kanbanAdd').addEventListener('click',()=>openFacilityForm());
+  $('bulkBtn').addEventListener('click',()=>openBulkForm());
+  $('addStageBtn').addEventListener('click',()=>openStageForm());
+  $('kanbanAddStage').addEventListener('click',()=>openStageForm());
+  $('searchInput').addEventListener('input',renderContacts);$('typeFilter').addEventListener('change',renderContacts);$('stageFilter').addEventListener('change',renderContacts);
+  $('exportBtn').addEventListener('click',exportJson);$('settingsExport').addEventListener('click',exportJson);$('importBtn').addEventListener('click',()=>$('importFile').click());$('importFile').addEventListener('change',e=>{if(e.target.files[0])importJson(e.target.files[0]);});$('resetBtn').addEventListener('click',resetAll);
+  $('todayLabel').textContent=new Date().toLocaleDateString('id-ID',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+  function renderStageFilter(){
+    const current=$('stageFilter').value;
+    $('stageFilter').innerHTML='<option value="">Semua tahapan</option>'+stages.map(s=>`<option value="${s.id}">${escapeHtml(s.label)}</option>`).join('');
+    if(stages.some(s=>s.id===current))$('stageFilter').value=current;
+  }
+  renderStageFilter();
+  renderAll();
+})();
+</script>
+</body>
+</html>
