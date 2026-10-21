@@ -498,23 +498,59 @@
         overflow-y: auto;
       }
 
-      /* Templates */
-      .templates-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+      /* Templates (accordion) */
+      .tpl-accordion {
+        border: 1px solid #e9ecef;
+        border-radius: 0.5rem;
+        overflow: hidden;
       }
-      @media (max-width: 767.98px) {
-        .templates-grid {
-          grid-template-columns: 1fr;
-        }
+      .tpl-accordion .accordion-item {
+        border-color: #e9ecef;
+        border-left: 0;
+        border-right: 0;
       }
-      .template-top {
+      .tpl-accordion .accordion-item:first-child {
+        border-top: 0;
+      }
+      .tpl-accordion .accordion-item:last-child {
+        border-bottom: 0;
+      }
+      .tpl-accordion .accordion-button {
+        padding: 0.85rem 1rem;
+        gap: 0.7rem;
+        align-items: center;
+        box-shadow: none !important;
+        background: #fff;
+      }
+      .tpl-accordion .accordion-button:not(.collapsed) {
+        background: #f5f9ff;
+        color: #0d6efd;
+        box-shadow: none !important;
+      }
+      .tpl-accordion .accordion-button:focus {
+        box-shadow: none !important;
+      }
+      .tpl-accordion .accordion-button .tpl-acc-title {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: #212529;
         display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        align-items: flex-start;
-        margin-bottom: 10px;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .tpl-accordion .accordion-button .tpl-acc-desc {
+        font-weight: 400;
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 2px;
+        line-height: 1.45;
+      }
+      .tpl-accordion .accordion-button:not(.collapsed) .tpl-acc-title {
+        color: #0d6efd;
+      }
+      .tpl-accordion .accordion-body {
+        padding: 1rem;
       }
       .template-icon {
         width: 38px;
@@ -536,8 +572,72 @@
         line-height: 1.65;
         font-size: 0.8125rem;
         color: #344054;
-        max-height: 230px;
+        max-height: 280px;
         overflow: auto;
+      }
+
+      /* Letter preview (Kirim Surat) */
+      .letter-preview {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 0.375rem;
+        padding: 26px 30px;
+        min-height: 340px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 0.9rem;
+        line-height: 1.75;
+        color: #1a1a1a;
+      }
+      .letter-kop {
+        text-align: center;
+        border-bottom: 3px double #212529;
+        padding-bottom: 10px;
+        margin-bottom: 16px;
+      }
+      .letter-kop-title {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 1.3rem;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        color: #111;
+      }
+      .letter-kop-sub {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #333;
+        margin-top: 2px;
+      }
+      .letter-kop-addr {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 0.66rem;
+        color: #6c757d;
+      }
+      .letter-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 0.8rem;
+        margin-bottom: 16px;
+      }
+      .letter-meta-label {
+        display: block;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 0.62rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #6c757d;
+        font-weight: 700;
+      }
+      .letter-body p {
+        margin-bottom: 0.9rem;
+      }
+      .letter-body p:last-child {
+        margin-bottom: 0;
+      }
+      .letter-empty {
+        color: #adb5bd;
+        font-style: italic;
       }
 
       /* SweetAlert form (Bootstrap) */
@@ -708,7 +808,10 @@
         </button>
         <div class="nav-label">Tools</div>
         <button class="nav-item" data-view="templates">
-          <i class="bi bi-chat-square-text"></i> Template Pesan
+          <i class="bi bi-chat-square-text"></i> Template Surat
+        </button>
+        <button class="nav-item" data-view="send">
+          <i class="bi bi-send"></i> Kirim Surat
         </button>
         <button class="nav-item" data-view="settings">
           <i class="bi bi-sliders"></i> Pengaturan Data
@@ -992,13 +1095,71 @@
           >
             <i class="bi bi-info-circle-fill mt-1"></i>
             <span
-              >Template dapat disalin dan disesuaikan. Placeholder <b>@</b> akan
-              diganti otomatis dengan nama fasilitas yang dipilih, misalnya
-              Labkesda Ketapang, RS Sejahtera, Puskesmas Sukamaju, atau Klinik
-              Sehat.</span
+              >Klik salah satu template untuk membuka isinya. Placeholder
+              <b>@</b> akan diganti otomatis dengan nama fasilitas yang dipilih.
+              Gunakan tombol <b>Salin Surat</b> untuk menyalin ke clipboard,
+              atau <b>Kirim Surat</b> untuk salin & cetak menjadi PDF.</span
             >
           </div>
-          <div class="templates-grid" id="templatesGrid"></div>
+          <div class="accordion tpl-accordion" id="templatesAccordion"></div>
+        </section>
+
+        <section class="content-view" id="view-send">
+          <div class="row g-3">
+            <div class="col-lg-4">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h2 class="h6 mb-1">Komposisi Surat</h2>
+                  <p class="text-muted small mb-3">
+                    Pilih template dan fasilitas penerima, lalu salin suratnya
+                    atau cetak menjadi PDF untuk dikirimkan ke mitra.
+                  </p>
+                  <label class="form-label" for="sendTemplate"
+                    >Template surat</label
+                  >
+                  <select id="sendTemplate" class="form-select"></select>
+                  <label class="form-label mt-3" for="sendFacility"
+                    >Fasilitas penerima</label
+                  >
+                  <select id="sendFacility" class="form-select"></select>
+                  <div class="form-text">
+                    Placeholder <b>@</b> diganti dengan nama fasilitas terpilih.
+                  </div>
+                  <div class="d-grid gap-2 mt-4">
+                    <button class="btn btn-primary" id="sendCopyBtn">
+                      <i class="bi bi-copy"></i> Salin Surat
+                    </button>
+                    <button class="btn btn-outline-primary" id="sendPrintBtn">
+                      <i class="bi bi-file-earmark-pdf"></i> Cetak Surat (PDF)
+                    </button>
+                  </div>
+                  <div
+                    class="alert alert-light border small py-2 mt-3 mb-0 d-flex align-items-start gap-2"
+                  >
+                    <i class="bi bi-info-circle mt-1"></i>
+                    <span
+                      >Pada dialog cetak, pilih <b>Save as PDF</b> sebagai
+                      tujuan printer. Berkas PDF siap dikirim ke mitra melalui
+                      WhatsApp atau email.</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-8">
+              <div class="card h-100">
+                <div class="card-body">
+                  <div
+                    class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"
+                  >
+                    <h2 class="h6 mb-0">Pratinjau Surat</h2>
+                    <span class="text-muted small" id="sendMeta"></span>
+                  </div>
+                  <div id="sendPreview" class="letter-preview"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section class="content-view" id="view-settings">
@@ -1075,8 +1236,9 @@
                 <div>
                   <h2 class="h6 mb-1">Template Surat / Pesan Kustom</h2>
                   <p class="text-muted small mb-0">
-                    Buat template surat atau pesan sendiri. Tersedia di menu
-                    Template Pesan dan ikut terexport dalam cadangan JSON.
+                    Buat template surat atau pesan sendiri. Tampil sebagai
+                    accordion di menu Template Surat, tersedia juga di menu
+                    Kirim Surat, dan ikut terexport dalam cadangan JSON.
                     Placeholder <b>@</b> diganti nama fasilitas.
                   </p>
                 </div>
@@ -1492,8 +1654,12 @@
               "Kelola progres implementasi secara visual dari satu tahapan ke tahapan berikutnya.",
             ],
             templates: [
-              "Template Pesan",
-              "Pesan follow-up siap salin untuk mempercepat komunikasi implementasi.",
+              "Template Surat",
+              "Kumpulan template surat & pesan dalam format accordion — buka, salin, atau kirim.",
+            ],
+            send: [
+              "Kirim Surat",
+              "Salin surat atau cetak menjadi PDF untuk dikirimkan ke mitra yang dituju.",
             ],
             settings: [
               "Pengaturan Data",
@@ -1502,7 +1668,7 @@
           }[view];
           $("pageTitle").textContent = meta[0];
           $("pageSubtitle").textContent = meta[1];
-          const hideTop = view === "templates" || view === "settings";
+          const hideTop = ["templates", "settings", "send"].includes(view);
           $("addBtn").classList.toggle("hidden", hideTop);
           $("bulkBtn").classList.toggle("hidden", hideTop);
           closeSidebarMobile();
@@ -1591,16 +1757,16 @@
           const badge = dueBadge(f);
           const schedCount = (f.schedules || []).length;
           return `<article class="kanban-card" draggable="true" data-id="${f.id}">
-        <div class="card-top"><div class="card-name">${escapeHtml(f.name)}</div><span class="card-type">${escapeHtml(f.type)}</span></div>
-        <div class="card-location"><i class="bi bi-geo-alt"></i>${escapeHtml([f.city, f.province].filter(Boolean).join(", ") || "Lokasi belum diisi")}</div>
-        ${range ? `<div class="card-range"><i class="bi bi-calendar3"></i> ${range}</div>` : ""}
-        ${badge ? `<div class="mt-1">${badge}</div>` : ""}
-        ${nextScheduleText(f)}
-        ${schedCount ? `<div class="card-range"><i class="bi bi-list-check"></i> ${schedCount} jadwal kegiatan</div>` : ""}
-        ${f.pic ? `<div class="card-contact"><i class="bi bi-person"></i> ${escapeHtml(f.pic)}</div>` : ""}
-        ${f.phone ? `<div class="card-contact"><i class="bi bi-telephone"></i> ${escapeHtml(f.phone)}</div>` : ""}
-        <div class="card-foot"><span class="card-date">${f.goLiveDate ? "Target " + dateText(f.goLiveDate) : "Update " + dateText(latestDate(f))}</span><div class="card-actions"><button title="Detail & jadwal" onclick="window.openCardDetail('${f.id}')"><i class="bi bi-calendar2-week"></i></button><button title="Salin pesan" onclick="window.copyFacilityMessage('${f.id}')"><i class="bi bi-chat-left-text"></i></button><button title="Edit" onclick="window.editFacility('${f.id}')"><i class="bi bi-pencil"></i></button><button title="Hapus" onclick="window.deleteFacility('${f.id}')"><i class="bi bi-trash3"></i></button></div></div>
-      </article>`;
+      <div class="card-top"><div class="card-name">${escapeHtml(f.name)}</div><span class="card-type">${escapeHtml(f.type)}</span></div>
+      <div class="card-location"><i class="bi bi-geo-alt"></i>${escapeHtml([f.city, f.province].filter(Boolean).join(", ") || "Lokasi belum diisi")}</div>
+      ${range ? `<div class="card-range"><i class="bi bi-calendar3"></i> ${range}</div>` : ""}
+      ${badge ? `<div class="mt-1">${badge}</div>` : ""}
+      ${nextScheduleText(f)}
+      ${schedCount ? `<div class="card-range"><i class="bi bi-list-check"></i> ${schedCount} jadwal kegiatan</div>` : ""}
+      ${f.pic ? `<div class="card-contact"><i class="bi bi-person"></i> ${escapeHtml(f.pic)}</div>` : ""}
+      ${f.phone ? `<div class="card-contact"><i class="bi bi-telephone"></i> ${escapeHtml(f.phone)}</div>` : ""}
+      <div class="card-foot"><span class="card-date">${f.goLiveDate ? "Target " + dateText(f.goLiveDate) : "Update " + dateText(latestDate(f))}</span><div class="card-actions"><button title="Detail & jadwal" onclick="window.openCardDetail('${f.id}')"><i class="bi bi-calendar2-week"></i></button><button title="Salin pesan" onclick="window.copyFacilityMessage('${f.id}')"><i class="bi bi-chat-left-text"></i></button><button title="Edit" onclick="window.editFacility('${f.id}')"><i class="bi bi-pencil"></i></button><button title="Hapus" onclick="window.deleteFacility('${f.id}')"><i class="bi bi-trash3"></i></button></div></div>
+    </article>`;
         }
         function renderKanban() {
           document.documentElement.style.setProperty(
@@ -1661,21 +1827,201 @@
             });
           });
         }
-        function templateCardHtml(t) {
+        function templateAccordionHtml(t, open) {
           const custom = !!userTemplates.find((x) => x.id === t.id);
-          return `<article class="card"><div class="card-body"><div class="template-top"><div class="d-flex gap-2"><div class="template-icon"><i class="bi ${t.icon || "bi-file-earmark-text"}"></i></div><div><h3 class="h6 mb-0">${escapeHtml(t.title)}${custom ? ' <span class="badge text-bg-secondary align-middle">Kustom</span>' : ""}</h3><div class="text-muted small">${escapeHtml(t.desc || "Template buatan sendiri")}</div></div></div><div class="d-flex gap-2 flex-shrink-0">
-        ${
-          custom
-            ? `<button class="btn btn-sm btn-outline-secondary" title="Edit template" onclick="window.editUserTemplate('${t.id}')"><i class="bi bi-pencil"></i></button>
-        <button class="btn btn-sm btn-outline-danger" title="Hapus template" onclick="window.deleteUserTemplate('${t.id}')"><i class="bi bi-trash3"></i></button>`
-            : ""
+          const bid = "tplBody-" + t.id;
+          return `<div class="accordion-item">
+      <h2 class="accordion-header" id="tplHead-${t.id}">
+        <button class="accordion-button ${open ? "" : "collapsed"}" type="button" data-bs-toggle="collapse" data-bs-target="#${bid}" aria-controls="${bid}" ${open ? "" : 'aria-expanded="false"'}>
+          <span class="template-icon"><i class="bi ${t.icon || "bi-file-earmark-text"}"></i></span>
+          <span style="min-width:0">
+            <span class="tpl-acc-title">${escapeHtml(t.title)}${custom ? ' <span class="badge text-bg-secondary">Kustom</span>' : ""}</span>
+            <span class="tpl-acc-desc">${escapeHtml(t.desc || "Template buatan sendiri")}</span>
+          </span>
+        </button>
+      </h2>
+      <div id="${bid}" class="accordion-collapse collapse ${open ? "show" : ""}" data-bs-parent="#templatesAccordion">
+        <div class="accordion-body">
+          <div class="template-body">${escapeHtml(t.text)}</div>
+          <div class="d-flex gap-2 flex-wrap mt-3">
+            <button class="btn btn-sm btn-primary" onclick="window.copyTemplate('${t.id}')"><i class="bi bi-copy"></i> Salin Surat</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="window.goSend('${t.id}')"><i class="bi bi-send"></i> Kirim Surat</button>
+            ${
+              custom
+                ? `<button class="btn btn-sm btn-outline-secondary" title="Edit template" onclick="window.editUserTemplate('${t.id}')"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="btn btn-sm btn-outline-danger" title="Hapus template" onclick="window.deleteUserTemplate('${t.id}')"><i class="bi bi-trash3"></i> Hapus</button>`
+                : ""
+            }
+          </div>
+        </div>
+      </div>
+    </div>`;
         }
-        <button class="btn btn-sm btn-outline-primary" onclick="window.copyTemplate('${t.id}')"><i class="bi bi-copy"></i> Salin</button></div></div><div class="template-body">${escapeHtml(t.text)}</div></div></article>`;
-        }
+        let openTemplateId = "kickoff";
         function renderTemplates() {
-          $("templatesGrid").innerHTML = allTemplates()
-            .map(templateCardHtml)
+          const current = document.querySelector(
+            "#templatesAccordion .accordion-collapse.show",
+          );
+          if (current && current.id.startsWith("tplBody-"))
+            openTemplateId = current.id.slice(8);
+          const list = allTemplates();
+          if (!list.some((t) => t.id === openTemplateId))
+            openTemplateId = list.length ? list[0].id : null;
+          $("templatesAccordion").innerHTML =
+            list
+              .map((t) => templateAccordionHtml(t, openTemplateId === t.id))
+              .join("") ||
+            `<div class="empty" style="padding:1.5rem"><strong>Belum ada template</strong>Tambahkan template surat melalui menu Pengaturan Data.</div>`;
+        }
+        function letterBodyHtml(text) {
+          const blocks = String(text || "")
+            .split(/\n{2,}/)
+            .filter((s) => s.trim());
+          if (!blocks.length)
+            return '<p class="letter-empty">Isi surat belum tersedia.</p>';
+          return blocks
+            .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
             .join("");
+        }
+        function letterLongDate() {
+          return new Date().toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          });
+        }
+        function letterShellHtml(text, title) {
+          return `<div class="letter-kop">
+        <div class="letter-kop-title">MEDISIN</div>
+        <div class="letter-kop-sub">MedisinLab · Tim Implementasi &amp; Support</div>
+        <div class="letter-kop-addr">Implementasi Aplikasi Rekam Medis Elektronik MedisinLab</div>
+      </div>
+      <div class="letter-meta">
+        <div><span class="letter-meta-label">Perihal</span>${escapeHtml(title || "Surat")}</div>
+        <div class="text-end"><span class="letter-meta-label">Tanggal</span>${letterLongDate()}</div>
+      </div>
+      <div class="letter-body">${letterBodyHtml(text)}</div>`;
+        }
+        let sendTemplateId = null;
+        function renderSend() {
+          const list = allTemplates();
+          const tplSel = $("sendTemplate"),
+            facSel = $("sendFacility");
+          const keepTpl = sendTemplateId || tplSel.value,
+            listHas = list.some((t) => t.id === keepTpl);
+          const keepFac = facSel.value;
+          tplSel.innerHTML = list
+            .map(
+              (t) =>
+                `<option value="${escapeHtml(t.id)}">${escapeHtml(t.title)}</option>`,
+            )
+            .join("");
+          facSel.innerHTML =
+            '<option value="">— Tanpa nama fasilitas —</option>' +
+            facilities
+              .map(
+                (f) =>
+                  `<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)} — ${escapeHtml(f.type)}</option>`,
+              )
+              .join("");
+          if (listHas) tplSel.value = keepTpl;
+          if (facilities.some((f) => f.name === keepFac))
+            facSel.value = keepFac;
+          sendTemplateId = tplSel.value;
+          updateSendPreview();
+        }
+        function updateSendPreview() {
+          const id = $("sendTemplate").value,
+            name = $("sendFacility").value;
+          const t = allTemplates().find((x) => x.id === id);
+          $("sendMeta").textContent = [
+            t ? t.title : "",
+            name || "tanpa nama fasilitas",
+          ]
+            .filter(Boolean)
+            .join(" → ");
+          $("sendPreview").innerHTML = t
+            ? letterShellHtml(getTemplateText(t.id, name), t.title)
+            : '<p class="letter-empty">Template tidak ditemukan.</p>';
+        }
+        window.goSend = (id) => {
+          sendTemplateId = id;
+          setView("send");
+        };
+        async function copySendLetter() {
+          const t = allTemplates().find(
+            (x) => x.id === $("sendTemplate").value,
+          );
+          if (!t) return;
+          const text = getTemplateText(t.id, $("sendFacility").value);
+          const copied = await copyText(text);
+          if (copied) toast("Surat berhasil disalin ke clipboard.");
+          else
+            Swal.fire({
+              icon: "info",
+              title: "Salin manual",
+              input: "textarea",
+              inputValue: text,
+              inputAttributes: { "aria-label": "Teks surat" },
+              confirmButtonText: "Tutup",
+            });
+        }
+        function printSendLetter() {
+          const t = allTemplates().find(
+            (x) => x.id === $("sendTemplate").value,
+          );
+          if (!t) return;
+          const name = $("sendFacility").value;
+          const text = getTemplateText(t.id, name);
+          const html = `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${escapeHtml("Surat - " + t.title + (name ? " - " + name : ""))}</title>
+<style>
+@page{size:A4;margin:18mm 20mm}
+*{box-sizing:border-box}
+body{font-family:Georgia,'Times New Roman',serif;font-size:12pt;line-height:1.65;color:#111;margin:0}
+.letter-kop{text-align:center;border-bottom:3px double #212529;padding-bottom:8pt;margin-bottom:14pt}
+.letter-kop-title{font-family:Arial,Helvetica,sans-serif;font-size:20pt;font-weight:800;letter-spacing:.18em;color:#111}
+.letter-kop-sub{font-family:Arial,Helvetica,sans-serif;font-size:10pt;font-weight:700;color:#333;margin-top:2pt}
+.letter-kop-addr{font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#555}
+.letter-meta{display:flex;justify-content:space-between;gap:16pt;font-size:11pt;margin-bottom:14pt}
+.letter-meta .text-end{text-align:right}
+.letter-meta-label{display:block;font-family:Arial,Helvetica,sans-serif;font-size:8.5pt;text-transform:uppercase;letter-spacing:.08em;color:#555;font-weight:700}
+.letter-body p{margin:0 0 10pt}
+.letter-body p:last-child{margin-bottom:0}
+.letter-empty{color:#777;font-style:italic}
+</style></head><body>${letterShellHtml(text, t.title)}</body></html>`;
+          const frame = document.createElement("iframe");
+          frame.setAttribute("aria-hidden", "true");
+          frame.style.cssText =
+            "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+          document.body.appendChild(frame);
+          const cleanup = () => {
+            if (frame.parentNode) frame.parentNode.removeChild(frame);
+          };
+          const w = frame.contentWindow;
+          w.document.open();
+          w.document.write(html);
+          w.document.close();
+          w.addEventListener("afterprint", () => setTimeout(cleanup, 300));
+          setTimeout(() => {
+            try {
+              w.focus();
+              w.print();
+              toast('Dialog cetak dibuka — pilih "Save as PDF".');
+            } catch (e) {
+              const win = window.open("", "_blank");
+              if (win) {
+                win.document.write(html);
+                win.document.close();
+                setTimeout(() => win.print(), 300);
+              } else
+                Swal.fire({
+                  icon: "warning",
+                  title: "Popup diblokir",
+                  text: "Izinkan popup pada browser ini, atau tekan Ctrl+P pada pratinjau surat untuk menyimpan sebagai PDF.",
+                });
+            }
+            setTimeout(cleanup, 180000);
+          }, 250);
         }
         function renderTemplateList() {
           $("templateList").innerHTML =
@@ -1684,14 +2030,14 @@
                 (
                   t,
                 ) => `<div class="d-flex align-items-center gap-3 py-2 border-bottom">
-        <span class="rounded d-inline-grid align-items-center justify-content-center bg-primary-subtle text-primary" style="width:28px;height:28px;font-size:.75rem;flex-shrink:0"><i class="bi bi-file-earmark-text"></i></span>
-        <div class="flex-grow-1" style="min-width:0"><strong style="font-size:.8125rem">${escapeHtml(t.title)}</strong><div class="text-muted text-truncate" style="font-size:.72rem;margin-top:2px">${escapeHtml(t.desc || t.text.slice(0, 80))}</div></div>
-        <div class="row-actions flex-shrink-0">
-          <button class="icon-btn" title="Salin template" onclick="window.copyTemplate('${t.id}')"><i class="bi bi-copy"></i></button>
-          <button class="icon-btn" title="Edit template" onclick="window.editUserTemplate('${t.id}')"><i class="bi bi-pencil"></i></button>
-          <button class="icon-btn" title="Hapus template" onclick="window.deleteUserTemplate('${t.id}')"><i class="bi bi-trash3"></i></button>
-        </div>
-      </div>`,
+      <span class="rounded d-inline-grid align-items-center justify-content-center bg-primary-subtle text-primary" style="width:28px;height:28px;font-size:.75rem;flex-shrink:0"><i class="bi bi-file-earmark-text"></i></span>
+      <div class="flex-grow-1" style="min-width:0"><strong style="font-size:.8125rem">${escapeHtml(t.title)}</strong><div class="text-muted text-truncate" style="font-size:.72rem;margin-top:2px">${escapeHtml(t.desc || t.text.slice(0, 80))}</div></div>
+      <div class="row-actions flex-shrink-0">
+        <button class="icon-btn" title="Salin template" onclick="window.copyTemplate('${t.id}')"><i class="bi bi-copy"></i></button>
+        <button class="icon-btn" title="Edit template" onclick="window.editUserTemplate('${t.id}')"><i class="bi bi-pencil"></i></button>
+        <button class="icon-btn" title="Hapus template" onclick="window.deleteUserTemplate('${t.id}')"><i class="bi bi-trash3"></i></button>
+      </div>
+    </div>`,
               )
               .join("") ||
             `<div class="empty" style="padding:1.5rem"><strong>Belum ada template kustom</strong>Klik "Tambah Template" untuk membuat surat/pesan sendiri.</div>`;
@@ -1704,16 +2050,16 @@
                 const first = i === 0,
                   last = i === stages.length - 1;
                 return `<div class="d-flex align-items-center gap-3 py-2 border-bottom">
-          <span class="rounded d-inline-grid align-items-center justify-content-center bg-light text-muted fw-bold" style="width:28px;height:28px;font-size:.7rem;flex-shrink:0">${i + 1}</span>
-          <span class="rounded-circle flex-shrink-0" style="width:9px;height:9px;background:${s.color}"></span>
-          <div class="flex-grow-1" style="min-width:0"><strong style="font-size:.8125rem">${escapeHtml(s.label)}</strong><div class="text-muted" style="font-size:.72rem;margin-top:2px">${escapeHtml(s.desc || "—")}${usage ? ` · <span class="text-primary">${usage} fasilitas</span>` : ""}</div></div>
-          <div class="row-actions flex-shrink-0">
-            <button class="icon-btn" title="Naikkan posisi" ${first ? 'disabled style="opacity:.35;pointer-events:none"' : ""} onclick="window.moveStage('${s.id}',-1)"><i class="bi bi-arrow-up"></i></button>
-            <button class="icon-btn" title="Turunkan posisi" ${last ? 'disabled style="opacity:.35;pointer-events:none"' : ""} onclick="window.moveStage('${s.id}',1)"><i class="bi bi-arrow-down"></i></button>
-            <button class="icon-btn" title="Edit tahapan" onclick="window.editStage('${s.id}')"><i class="bi bi-pencil"></i></button>
-            <button class="icon-btn" title="Hapus tahapan" onclick="window.deleteStage('${s.id}')"><i class="bi bi-trash3"></i></button>
-          </div>
-        </div>`;
+        <span class="rounded d-inline-grid align-items-center justify-content-center bg-light text-muted fw-bold" style="width:28px;height:28px;font-size:.7rem;flex-shrink:0">${i + 1}</span>
+        <span class="rounded-circle flex-shrink-0" style="width:9px;height:9px;background:${s.color}"></span>
+        <div class="flex-grow-1" style="min-width:0"><strong style="font-size:.8125rem">${escapeHtml(s.label)}</strong><div class="text-muted" style="font-size:.72rem;margin-top:2px">${escapeHtml(s.desc || "—")}${usage ? ` · <span class="text-primary">${usage} fasilitas</span>` : ""}</div></div>
+        <div class="row-actions flex-shrink-0">
+          <button class="icon-btn" title="Naikkan posisi" ${first ? 'disabled style="opacity:.35;pointer-events:none"' : ""} onclick="window.moveStage('${s.id}',-1)"><i class="bi bi-arrow-up"></i></button>
+          <button class="icon-btn" title="Turunkan posisi" ${last ? 'disabled style="opacity:.35;pointer-events:none"' : ""} onclick="window.moveStage('${s.id}',1)"><i class="bi bi-arrow-down"></i></button>
+          <button class="icon-btn" title="Edit tahapan" onclick="window.editStage('${s.id}')"><i class="bi bi-pencil"></i></button>
+          <button class="icon-btn" title="Hapus tahapan" onclick="window.deleteStage('${s.id}')"><i class="bi bi-trash3"></i></button>
+        </div>
+      </div>`;
               })
               .join("") ||
             `<div class="empty" style="padding:1.5rem"><strong>Belum ada tahapan</strong>Tambahkan tahapan pipeline terlebih dahulu.</div>`;
@@ -1742,10 +2088,10 @@
             cancelButtonText: "Batal",
             focusConfirm: false,
             html: `<div class="row text-start mt-2">
-          <div class="col-12 mb-3"><label for="sLabel" class="form-label">Nama tahapan *</label><input id="sLabel" class="form-control" value="${escapeHtml(s.label)}" placeholder="Contoh: Persiapan Kontrak"></div>
-          <div class="col-12 mb-3"><label for="sDesc" class="form-label">Deskripsi singkat</label><input id="sDesc" class="form-control" value="${escapeHtml(s.desc || "")}" placeholder="Contoh: Review dokumen dan penandatanganan"></div>
-          <div class="col-12 mb-2"><label for="sColor" class="form-label">Warna penanda</label><select id="sColor" class="form-select">${STAGE_COLORS.map((c) => `<option value="${c}" ${s.color === c ? "selected" : ""}>■ ${c}</option>`).join("")}</select></div>
-        </div><div class="text-start form-text">Tahapan baru akan ditambahkan setelah tahapan terakhir pada board Kanban.</div>`,
+        <div class="col-12 mb-3"><label for="sLabel" class="form-label">Nama tahapan *</label><input id="sLabel" class="form-control" value="${escapeHtml(s.label)}" placeholder="Contoh: Persiapan Kontrak"></div>
+        <div class="col-12 mb-3"><label for="sDesc" class="form-label">Deskripsi singkat</label><input id="sDesc" class="form-control" value="${escapeHtml(s.desc || "")}" placeholder="Contoh: Review dokumen dan penandatanganan"></div>
+        <div class="col-12 mb-2"><label for="sColor" class="form-label">Warna penanda</label><select id="sColor" class="form-select">${STAGE_COLORS.map((c) => `<option value="${c}" ${s.color === c ? "selected" : ""}>■ ${c}</option>`).join("")}</select></div>
+      </div><div class="text-start form-text">Tahapan baru akan ditambahkan setelah tahapan terakhir pada board Kanban.</div>`,
             preConfirm: () => {
               const label = $("sLabel").value.trim();
               if (!label) {
@@ -1842,6 +2188,7 @@
           renderContacts();
           renderKanban();
           renderTemplates();
+          renderSend();
           renderSettings();
         }
         function toast(message) {
@@ -1918,46 +2265,46 @@
             cancelButtonText: "Batal",
             focusConfirm: false,
             html: `<div>
-          <div class="wizard-steps">${stepDots}</div>
-          <div class="wizard-panel active text-start" data-panel="1">
-            <div class="row g-0">
-              ${fieldHtml("fName", "Nama fasilitas", f.name, "text", "Contoh: Labkesda Ketapang", true, true)}
-              ${selectHtml("fType", "Jenis fasilitas", typeOptions, true)}
-              ${selectHtml("fStage", "Tahapan implementasi", stageOptions, true)}
-              ${fieldHtml("fCode", "Kode / label internal", f.code, "text", "Contoh: LAB-KTP", false, true)}
-            </div>
+        <div class="wizard-steps">${stepDots}</div>
+        <div class="wizard-panel active text-start" data-panel="1">
+          <div class="row g-0">
+            ${fieldHtml("fName", "Nama fasilitas", f.name, "text", "Contoh: Labkesda Ketapang", true, true)}
+            ${selectHtml("fType", "Jenis fasilitas", typeOptions, true)}
+            ${selectHtml("fStage", "Tahapan implementasi", stageOptions, true)}
+            ${fieldHtml("fCode", "Kode / label internal", f.code, "text", "Contoh: LAB-KTP", false, true)}
           </div>
-          <div class="wizard-panel text-start" data-panel="2">
-            <div class="row g-0">
-              ${fieldHtml("fPic", "Nama PIC", f.pic, "text", "Nama penanggung jawab")}
-              ${fieldHtml("fPhone", "Nomor WhatsApp / telepon", f.phone, "tel", "08xxxxxxxxxx")}
-              ${fieldHtml("fEmail", "Email", f.email, "email", "nama@instansi.go.id")}
-              ${fieldHtml("fCity", "Kabupaten / kota", f.city, "text", "Contoh: Ketapang")}
-              ${fieldHtml("fProvince", "Provinsi", f.province, "text", "Contoh: Kalimantan Barat")}
-            </div>
+        </div>
+        <div class="wizard-panel text-start" data-panel="2">
+          <div class="row g-0">
+            ${fieldHtml("fPic", "Nama PIC", f.pic, "text", "Nama penanggung jawab")}
+            ${fieldHtml("fPhone", "Nomor WhatsApp / telepon", f.phone, "tel", "08xxxxxxxxxx")}
+            ${fieldHtml("fEmail", "Email", f.email, "email", "nama@instansi.go.id")}
+            ${fieldHtml("fCity", "Kabupaten / kota", f.city, "text", "Contoh: Ketapang")}
+            ${fieldHtml("fProvince", "Provinsi", f.province, "text", "Contoh: Kalimantan Barat")}
           </div>
-          <div class="wizard-panel text-start" data-panel="3">
-            <div class="row g-0">
-              ${fieldHtml("fStart", "Tanggal mulai", f.startDate, "date")}
-              ${fieldHtml("fEnd", "Tanggal selesai (due date)", f.endDate, "date")}
-              ${fieldHtml("fLive", "Target Go-Live", f.goLiveDate, "date")}
-              <div class="mb-3 col-md-6"><label for="fTz" class="form-label">Zona waktu kartu</label><select id="fTz" class="form-select">${Object.keys(
-                TIMEZONES,
+        </div>
+        <div class="wizard-panel text-start" data-panel="3">
+          <div class="row g-0">
+            ${fieldHtml("fStart", "Tanggal mulai", f.startDate, "date")}
+            ${fieldHtml("fEnd", "Tanggal selesai (due date)", f.endDate, "date")}
+            ${fieldHtml("fLive", "Target Go-Live", f.goLiveDate, "date")}
+            <div class="mb-3 col-md-6"><label for="fTz" class="form-label">Zona waktu kartu</label><select id="fTz" class="form-select">${Object.keys(
+              TIMEZONES,
+            )
+              .map(
+                (k) =>
+                  `<option value="${k}" ${(f.timezone || boardTzKey()) === k ? "selected" : ""}>${TIMEZONES[k].full}</option>`,
               )
-                .map(
-                  (k) =>
-                    `<option value="${k}" ${(f.timezone || boardTzKey()) === k ? "selected" : ""}>${TIMEZONES[k].full}</option>`,
-                )
-                .join(
-                  "",
-                )}</select><div class="form-text">Kosongkan mengikuti zona waktu papan. Jadwal kegiatan diatur setelah disimpan (klik kartu di Kanban).</div></div>
-              ${fieldHtml("fGroup", "Link grup koordinasi", f.groupLink, "url", "https://chat.whatsapp.com/... ", false, true)}
-              <div class="mb-2 col-12"><label for="fAddress" class="form-label">Alamat</label><input id="fAddress" class="form-control" value="${escapeHtml(f.address)}" placeholder="Alamat fasilitas"></div>
-              <div class="mb-1 col-12"><label for="fNotes" class="form-label">Catatan implementasi</label><textarea id="fNotes" class="form-control" rows="3" placeholder="Progress, kendala, tindak lanjut, jadwal...">${escapeHtml(f.notes)}</textarea></div>
-            </div>
+              .join(
+                "",
+              )}</select><div class="form-text">Kosongkan mengikuti zona waktu papan. Jadwal kegiatan diatur setelah disimpan (klik kartu di Kanban).</div></div>
+            ${fieldHtml("fGroup", "Link grup koordinasi", f.groupLink, "url", "https://chat.whatsapp.com/... ", false, true)}
+            <div class="mb-2 col-12"><label for="fAddress" class="form-label">Alamat</label><input id="fAddress" class="form-control" value="${escapeHtml(f.address)}" placeholder="Alamat fasilitas"></div>
+            <div class="mb-1 col-12"><label for="fNotes" class="form-label">Catatan implementasi</label><textarea id="fNotes" class="form-control" rows="3" placeholder="Progress, kendala, tindak lanjut, jadwal...">${escapeHtml(f.notes)}</textarea></div>
           </div>
-          <div class="form-text mt-2">Langkah <span id="wStepNow">${step}</span> dari ${TOTAL} · * Wajib diisi. Data disimpan di browser ini.</div>
-        </div>`,
+        </div>
+        <div class="form-text mt-2">Langkah <span id="wStepNow">${step}</span> dari ${TOTAL} · * Wajib diisi. Data disimpan di browser ini.</div>
+      </div>`,
             didOpen: () => updateWizard(),
             preDeny: () => {
               if (step > 1) {
@@ -2095,14 +2442,14 @@
             )
             .join("");
           return `<div class="bulk-row row g-2 align-items-end" data-bulk-row>
-        <div class="col-12 col-md-3"><label class="form-label">Nama fasilitas *</label><input class="form-control" data-b="name" value="${escapeHtml(vals.name || "")}" placeholder="Labkesda Ketapang"></div>
-        <div class="col-6 col-md-2"><label class="form-label">Jenis</label><select class="form-select" data-b="type">${typeOpts}</select></div>
-        <div class="col-6 col-md-2"><label class="form-label">Tahapan</label><select class="form-select" data-b="stage">${stageOpts}</select></div>
-        <div class="col-6 col-md-2"><label class="form-label">Kota</label><input class="form-control" data-b="city" value="${escapeHtml(vals.city || "")}" placeholder="Ketapang"></div>
-        <div class="col-4 col-md-2"><label class="form-label">PIC</label><input class="form-control" data-b="pic" value="${escapeHtml(vals.pic || "")}" placeholder="Nama PIC"></div>
-        <div class="col-2 col-md-1 text-end"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-bulk-remove title="Hapus baris"><i class="bi bi-x-lg"></i></button></div>
-        <div class="col-12 col-md-11 offset-md-1"><input class="form-control form-control-sm" data-b="phone" value="${escapeHtml(vals.phone || "")}" placeholder="Telepon (opsional)"></div>
-      </div>`;
+      <div class="col-12 col-md-3"><label class="form-label">Nama fasilitas *</label><input class="form-control" data-b="name" value="${escapeHtml(vals.name || "")}" placeholder="Labkesda Ketapang"></div>
+      <div class="col-6 col-md-2"><label class="form-label">Jenis</label><select class="form-select" data-b="type">${typeOpts}</select></div>
+      <div class="col-6 col-md-2"><label class="form-label">Tahapan</label><select class="form-select" data-b="stage">${stageOpts}</select></div>
+      <div class="col-6 col-md-2"><label class="form-label">Kota</label><input class="form-control" data-b="city" value="${escapeHtml(vals.city || "")}" placeholder="Ketapang"></div>
+      <div class="col-4 col-md-2"><label class="form-label">PIC</label><input class="form-control" data-b="pic" value="${escapeHtml(vals.pic || "")}" placeholder="Nama PIC"></div>
+      <div class="col-2 col-md-1 text-end"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-bulk-remove title="Hapus baris"><i class="bi bi-x-lg"></i></button></div>
+      <div class="col-12 col-md-11 offset-md-1"><input class="form-control form-control-sm" data-b="phone" value="${escapeHtml(vals.phone || "")}" placeholder="Telepon (opsional)"></div>
+    </div>`;
         }
         async function openBulkForm() {
           const result = await Swal.fire({
@@ -2113,13 +2460,13 @@
             cancelButtonText: "Batal",
             focusConfirm: false,
             html: `<div class="text-start">
-          <p class="text-muted small mb-3">Isi beberapa fasilitas sekaligus dalam satu kali simpan. Baris yang namanya kosong akan diabaikan.</p>
-          <div id="bulkRows" class="bulk-scroll d-grid gap-2">
-            ${bulkRowHtml()}${bulkRowHtml()}${bulkRowHtml()}${bulkRowHtml()}${bulkRowHtml()}
-          </div>
-          <button type="button" class="btn btn-outline-primary btn-sm mt-3" id="bulkAddRow"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
-          <div class="form-text mt-2">Tanggal mulai otomatis diisi hari ini. Lengkapi detail lain (alamat, email, target go-live, dll.) lewat menu Edit setelah disimpan.</div>
-        </div>`,
+        <p class="text-muted small mb-3">Isi beberapa fasilitas sekaligus dalam satu kali simpan. Baris yang namanya kosong akan diabaikan.</p>
+        <div id="bulkRows" class="bulk-scroll d-grid gap-2">
+          ${bulkRowHtml()}${bulkRowHtml()}${bulkRowHtml()}${bulkRowHtml()}${bulkRowHtml()}
+        </div>
+        <button type="button" class="btn btn-outline-primary btn-sm mt-3" id="bulkAddRow"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
+        <div class="form-text mt-2">Tanggal mulai otomatis diisi hari ini. Lengkapi detail lain (alamat, email, target go-live, dll.) lewat menu Edit setelah disimpan.</div>
+      </div>`,
             didOpen: () => {
               $("bulkAddRow").addEventListener("click", () => {
                 const last = $("bulkRows").querySelectorAll("[data-bulk-row]");
@@ -2246,16 +2593,16 @@
             cancelButtonText: "Tutup",
             focusConfirm: false,
             html: `<div class="text-start mt-2">
-          <label for="zoomVariant" class="form-label">Jenis pesan</label>
-          <select id="zoomVariant" class="form-select">${zoomVariantOptions()}</select>
-          <div class="form-text mb-2">Berlaku universal untuk semua jenis kegiatan: kick-off, training, monitoring & evaluasi, maupun agenda lainnya.</div>
-          <label for="zoomDue" class="form-label">Due date / tenggat kegiatan</label>
-          <input id="zoomDue" type="date" class="form-control" value="${escapeHtml(defaultDueDate(f, s))}">
-          <div class="form-text mb-2">Pratinjau pesan otomatis diperbarui. Kosongkan jika tidak menampilkan tenggat.</div>
-          <label for="zoomPreview" class="form-label">Pratinjau pesan <span class="text-muted fw-normal">(boleh diedit)</span></label>
-          <textarea id="zoomPreview" class="form-control" style="min-height:300px"></textarea>
-          <div class="form-text">Tautan Zoom: ${s.zoomLink ? escapeHtml(s.zoomLink) : "belum diisi pada jadwal ini."}</div>
-        </div>`,
+        <label for="zoomVariant" class="form-label">Jenis pesan</label>
+        <select id="zoomVariant" class="form-select">${zoomVariantOptions()}</select>
+        <div class="form-text mb-2">Berlaku universal untuk semua jenis kegiatan: kick-off, training, monitoring & evaluasi, maupun agenda lainnya.</div>
+        <label for="zoomDue" class="form-label">Due date / tenggat kegiatan</label>
+        <input id="zoomDue" type="date" class="form-control" value="${escapeHtml(defaultDueDate(f, s))}">
+        <div class="form-text mb-2">Pratinjau pesan otomatis diperbarui. Kosongkan jika tidak menampilkan tenggat.</div>
+        <label for="zoomPreview" class="form-label">Pratinjau pesan <span class="text-muted fw-normal">(boleh diedit)</span></label>
+        <textarea id="zoomPreview" class="form-control" style="min-height:300px"></textarea>
+        <div class="form-text">Tautan Zoom: ${s.zoomLink ? escapeHtml(s.zoomLink) : "belum diisi pada jadwal ini."}</div>
+      </div>`,
             didOpen: () => {
               $("zoomPreview").value = build();
               $("zoomVariant").addEventListener("change", () => {
@@ -2321,18 +2668,18 @@
           const tasks = s.tasks || [];
           const doneCount = tasks.filter((t) => t.done).length;
           return `<div class="sched-item mb-2">
-        <div class="d-flex justify-content-between align-items-start gap-2">
-          <div class="sched-time"><i class="bi bi-clock"></i> ${escapeHtml(fmtDateTimeLocal(s.date, s.startTime, tz))}${s.endTime ? " – " + escapeHtml(fmtTimeOnly(s.endTime, tz)) : ""}</div>
-          <div class="row-actions flex-shrink-0">
-            ${s.zoomLink ? `<button class="icon-btn" title="Salin undangan Zoom" onclick="window.copyZoomInvite('${f.id}','${s.id}')"><i class="bi bi-camera-video-fill"></i></button>` : ""}
-            <button class="icon-btn" title="Edit jadwal" onclick="window.editSchedule('${f.id}','${s.id}')"><i class="bi bi-pencil"></i></button>
-            <button class="icon-btn" title="Hapus jadwal" onclick="window.deleteSchedule('${f.id}','${s.id}')"><i class="bi bi-trash3"></i></button>
-          </div>
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <div class="sched-time"><i class="bi bi-clock"></i> ${escapeHtml(fmtDateTimeLocal(s.date, s.startTime, tz))}${s.endTime ? " – " + escapeHtml(fmtTimeOnly(s.endTime, tz)) : ""}</div>
+        <div class="row-actions flex-shrink-0">
+          ${s.zoomLink ? `<button class="icon-btn" title="Salin undangan Zoom" onclick="window.copyZoomInvite('${f.id}','${s.id}')"><i class="bi bi-camera-video-fill"></i></button>` : ""}
+          <button class="icon-btn" title="Edit jadwal" onclick="window.editSchedule('${f.id}','${s.id}')"><i class="bi bi-pencil"></i></button>
+          <button class="icon-btn" title="Hapus jadwal" onclick="window.deleteSchedule('${f.id}','${s.id}')"><i class="bi bi-trash3"></i></button>
         </div>
-        ${s.note ? `<div class="sched-note"><i class="bi bi-journal-text me-1"></i>${escapeHtml(s.note)}</div>` : ""}
-        ${s.zoomLink ? `<div class="sched-note"><i class="bi bi-camera-video me-1"></i><a href="${escapeHtml(s.zoomLink)}" target="_blank" rel="noopener" class="text-decoration-none">${escapeHtml(s.zoomLink)}</a></div>` : ""}
-        ${tasks.length ? `<div class="mt-2">${tasks.map((t) => `<div class="form-check mb-1"><input class="form-check-input" type="checkbox" ${t.done ? "checked" : ""} id="tk-${t.id}" onchange="window.toggleTask('${f.id}','${s.id}','${t.id}')"><label class="form-check-label small ${t.done ? "text-decoration-line-through text-muted" : ""}" for="tk-${t.id}">${escapeHtml(t.text)}${t.dueDate ? ` <span class="text-muted">· tenggat ${escapeHtml(fmtDateTimeLocal(t.dueDate, null, tz))}</span>` : ""}</label></div>`).join("")}<div class="form-text">${doneCount}/${tasks.length} sub-tugas selesai</div></div>` : ""}
-      </div>`;
+      </div>
+      ${s.note ? `<div class="sched-note"><i class="bi bi-journal-text me-1"></i>${escapeHtml(s.note)}</div>` : ""}
+      ${s.zoomLink ? `<div class="sched-note"><i class="bi bi-camera-video me-1"></i><a href="${escapeHtml(s.zoomLink)}" target="_blank" rel="noopener" class="text-decoration-none">${escapeHtml(s.zoomLink)}</a></div>` : ""}
+      ${tasks.length ? `<div class="mt-2">${tasks.map((t) => `<div class="form-check mb-1"><input class="form-check-input" type="checkbox" ${t.done ? "checked" : ""} id="tk-${t.id}" onchange="window.toggleTask('${f.id}','${s.id}','${t.id}')"><label class="form-check-label small ${t.done ? "text-decoration-line-through text-muted" : ""}" for="tk-${t.id}">${escapeHtml(t.text)}${t.dueDate ? ` <span class="text-muted">· tenggat ${escapeHtml(fmtDateTimeLocal(t.dueDate, null, tz))}</span>` : ""}</label></div>`).join("")}<div class="form-text">${doneCount}/${tasks.length} sub-tugas selesai</div></div>` : ""}
+    </div>`;
         }
         window.openCardDetail = (id) => {
           const f = facilities.find((x) => x.id === id);
@@ -2354,26 +2701,26 @@
             confirmButtonText: "Edit Data Fasilitas",
             focusConfirm: false,
             html: `<div class="text-start mt-2">
-          <div class="d-flex flex-wrap gap-2 mb-2">
-            <span class="type-pill">${escapeHtml(f.type)}</span>
-            <span class="badge bg-secondary">${escapeHtml(stage(f.stage).label)}</span>
-            ${badge}
+        <div class="d-flex flex-wrap gap-2 mb-2">
+          <span class="type-pill">${escapeHtml(f.type)}</span>
+          <span class="badge bg-secondary">${escapeHtml(stage(f.stage).label)}</span>
+          ${badge}
+        </div>
+        <div class="row g-2 small mb-2">
+          <div class="col-sm-6"><i class="bi bi-geo-alt text-muted me-1"></i>${escapeHtml([f.city, f.province].filter(Boolean).join(", ") || "—")}</div>
+          <div class="col-sm-6"><i class="bi bi-person text-muted me-1"></i>${escapeHtml(f.pic || "—")}${f.phone ? ` · ${escapeHtml(f.phone)}` : ""}</div>
+        </div>
+        ${range ? `<div class="alert alert-light border py-2 small mb-2"><i class="bi bi-calendar3 me-1"></i><b>Rentang waktu:</b> ${range}<div class="form-text">Zona waktu kartu: ${tzInfo(tz).full}</div></div>` : ""}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <strong class="small">Jadwal Kegiatan (${scheds.length})</strong>
+          <div class="d-flex gap-2">
+            ${scheds.some((s) => s.zoomLink) ? `<button type="button" class="btn btn-sm btn-outline-success" onclick="window.quickZoomInvite('${f.id}')"><i class="bi bi-camera-video"></i> Undangan Zoom</button>` : ""}
+            <button type="button" class="btn btn-sm btn-primary" onclick="window.addSchedule('${f.id}')"><i class="bi bi-plus-lg"></i> Tambah Jadwal</button>
           </div>
-          <div class="row g-2 small mb-2">
-            <div class="col-sm-6"><i class="bi bi-geo-alt text-muted me-1"></i>${escapeHtml([f.city, f.province].filter(Boolean).join(", ") || "—")}</div>
-            <div class="col-sm-6"><i class="bi bi-person text-muted me-1"></i>${escapeHtml(f.pic || "—")}${f.phone ? ` · ${escapeHtml(f.phone)}` : ""}</div>
-          </div>
-          ${range ? `<div class="alert alert-light border py-2 small mb-2"><i class="bi bi-calendar3 me-1"></i><b>Rentang waktu:</b> ${range}<div class="form-text">Zona waktu kartu: ${tzInfo(tz).full}</div></div>` : ""}
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <strong class="small">Jadwal Kegiatan (${scheds.length})</strong>
-            <div class="d-flex gap-2">
-              ${scheds.some((s) => s.zoomLink) ? `<button type="button" class="btn btn-sm btn-outline-success" onclick="window.quickZoomInvite('${f.id}')"><i class="bi bi-camera-video"></i> Undangan Zoom</button>` : ""}
-              <button type="button" class="btn btn-sm btn-primary" onclick="window.addSchedule('${f.id}')"><i class="bi bi-plus-lg"></i> Tambah Jadwal</button>
-            </div>
-          </div>
-          <div class="sched-list">${scheds.length ? scheds.map((s) => scheduleItemHtml(f, s)).join("") : '<div class="text-muted small py-2">Belum ada jadwal kegiatan. Klik "Tambah Jadwal" untuk membuat jadwal pertama.</div>'}</div>
-          ${f.notes ? `<div class="mt-2 small"><i class="bi bi-sticky text-muted me-1"></i>${escapeHtml(f.notes)}</div>` : ""}
-        </div>`,
+        </div>
+        <div class="sched-list">${scheds.length ? scheds.map((s) => scheduleItemHtml(f, s)).join("") : '<div class="text-muted small py-2">Belum ada jadwal kegiatan. Klik "Tambah Jadwal" untuk membuat jadwal pertama.</div>'}</div>
+        ${f.notes ? `<div class="mt-2 small"><i class="bi bi-sticky text-muted me-1"></i>${escapeHtml(f.notes)}</div>` : ""}
+      </div>`,
             preConfirm: () => true,
           }).then((res) => {
             if (res.isConfirmed) openFacilityForm(f);
@@ -2432,11 +2779,11 @@
               tasks
                 .map(
                   (t, i) => `<div class="task-row" data-task-row="${i}">
-          <input class="form-control" data-t="text" value="${escapeHtml(t.text)}" placeholder="Sub-tugas / agenda singkat">
-          <input type="date" class="form-control" data-t="due" value="${escapeHtml(t.dueDate)}" style="max-width:150px" title="Batas waktu sub-tugas (opsional)">
-          <div class="form-check ms-1" title="Sudah selesai"><input class="form-check-input" type="checkbox" data-t="done" ${t.done ? "checked" : ""}></div>
-          <button type="button" class="btn btn-outline-danger btn-sm" data-t="remove" title="Hapus baris"><i class="bi bi-x-lg"></i></button>
-        </div>`,
+        <input class="form-control" data-t="text" value="${escapeHtml(t.text)}" placeholder="Sub-tugas / agenda singkat">
+        <input type="date" class="form-control" data-t="due" value="${escapeHtml(t.dueDate)}" style="max-width:150px" title="Batas waktu sub-tugas (opsional)">
+        <div class="form-check ms-1" title="Sudah selesai"><input class="form-check-input" type="checkbox" data-t="done" ${t.done ? "checked" : ""}></div>
+        <button type="button" class="btn btn-outline-danger btn-sm" data-t="remove" title="Hapus baris"><i class="bi bi-x-lg"></i></button>
+      </div>`,
                 )
                 .join("") ||
               '<div class="text-muted small mb-2">Belum ada sub-tugas.</div>';
@@ -2461,21 +2808,21 @@
             cancelButtonText: "Batal",
             focusConfirm: false,
             html: `<div class="text-start mt-2">
-          <div class="row g-0">
-            <div class="mb-3 col-md-6"><label for="schDate" class="form-label">Tanggal kegiatan *</label><input id="schDate" type="date" class="form-control" value="${escapeHtml(existing ? existing.date : "")}"></div>
-            <div class="mb-3 col-md-6"><label for="schTz" class="form-label">Zona waktu</label>${tzSelectHtml("schTz", tz)}</div>
-            <div class="mb-3 col-md-6"><label for="schStart" class="form-label">Jam mulai</label><input id="schStart" type="time" class="form-control" value="${escapeHtml(existing ? existing.startTime || "" : "")}"></div>
-            <div class="mb-3 col-md-6"><label for="schEnd" class="form-label">Jam selesai</label><input id="schEnd" type="time" class="form-control" value="${escapeHtml(existing ? existing.endTime || "" : "")}"></div>
-            <div class="mb-3 col-12"><label for="schNote" class="form-label">Catatan / agenda</label><textarea id="schNote" class="form-control" rows="2" placeholder="Contoh: Sesi kick-off daring bersama PIC laboratorium">${escapeHtml(existing ? existing.note || "" : "")}</textarea></div>
-            <div class="mb-1 col-12"><label for="schZoom" class="form-label">Link Zoom <span class="text-muted fw-normal">(opsional)</span></label><input id="schZoom" type="url" class="form-control" value="${escapeHtml(existing ? existing.zoomLink || "" : "")}" placeholder="https://zoom.us/j/1234567890"><div class="form-text">Jika diisi, tombol "Salin undangan Zoom" akan muncul pada jadwal dan pesan otomatis disusun lengkap dengan agenda, waktu, serta zona waktu.</div></div>
-          </div>
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <label class="form-label mb-0">Checklist / sub-tugas <span class="text-muted fw-normal">(opsional, punya batas waktu sendiri)</span></label>
-            <button type="button" class="btn btn-sm btn-outline-primary" id="schAddTask"><i class="bi bi-plus-lg"></i> Sub-tugas</button>
-          </div>
-          <div id="schTasks"></div>
-          <div class="form-text mt-1">Contoh tampilan: ${escapeHtml(fmtDateTimeLocal(existing ? existing.date : todayISO(), existing ? existing.startTime : "09:00", tz))}</div>
-        </div>`,
+        <div class="row g-0">
+          <div class="mb-3 col-md-6"><label for="schDate" class="form-label">Tanggal kegiatan *</label><input id="schDate" type="date" class="form-control" value="${escapeHtml(existing ? existing.date : "")}"></div>
+          <div class="mb-3 col-md-6"><label for="schTz" class="form-label">Zona waktu</label>${tzSelectHtml("schTz", tz)}</div>
+          <div class="mb-3 col-md-6"><label for="schStart" class="form-label">Jam mulai</label><input id="schStart" type="time" class="form-control" value="${escapeHtml(existing ? existing.startTime || "" : "")}"></div>
+          <div class="mb-3 col-md-6"><label for="schEnd" class="form-label">Jam selesai</label><input id="schEnd" type="time" class="form-control" value="${escapeHtml(existing ? existing.endTime || "" : "")}"></div>
+          <div class="mb-3 col-12"><label for="schNote" class="form-label">Catatan / agenda</label><textarea id="schNote" class="form-control" rows="2" placeholder="Contoh: Sesi kick-off daring bersama PIC laboratorium">${escapeHtml(existing ? existing.note || "" : "")}</textarea></div>
+          <div class="mb-1 col-12"><label for="schZoom" class="form-label">Link Zoom <span class="text-muted fw-normal">(opsional)</span></label><input id="schZoom" type="url" class="form-control" value="${escapeHtml(existing ? existing.zoomLink || "" : "")}" placeholder="https://zoom.us/j/1234567890"><div class="form-text">Jika diisi, tombol "Salin undangan Zoom" akan muncul pada jadwal dan pesan otomatis disusun lengkap dengan agenda, waktu, serta zona waktu.</div></div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <label class="form-label mb-0">Checklist / sub-tugas <span class="text-muted fw-normal">(opsional, punya batas waktu sendiri)</span></label>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="schAddTask"><i class="bi bi-plus-lg"></i> Sub-tugas</button>
+        </div>
+        <div id="schTasks"></div>
+        <div class="form-text mt-1">Contoh tampilan: ${escapeHtml(fmtDateTimeLocal(existing ? existing.date : todayISO(), existing ? existing.startTime : "09:00", tz))}</div>
+      </div>`,
             didOpen: () => {
               renderTasks();
               $("schAddTask").addEventListener("click", () => {
@@ -2591,13 +2938,13 @@
             cancelButtonText: "Batal",
             focusConfirm: false,
             html: `<div class="text-start mt-2">
-          <div class="row g-0">
-            <div class="mb-3 col-md-7"><label for="tplTitle" class="form-label">Nama template *</label><input id="tplTitle" class="form-control" value="${escapeHtml(t.title)}" placeholder="Contoh: Surat Undangan Rapat Koordinasi"></div>
-            <div class="mb-3 col-md-5"><label for="tplDesc" class="form-label">Deskripsi singkat</label><input id="tplDesc" class="form-control" value="${escapeHtml(t.desc || "")}" placeholder="Contoh: Undangan rapat bulanan"></div>
-          </div>
-          <div class="mb-2"><label for="tplText" class="form-label">Isi surat / pesan *</label><textarea id="tplText" class="form-control" rows="10" style="white-space:pre-wrap" placeholder="Tulis isi surat atau pesan...">${escapeHtml(t.text)}</textarea></div>
-          <div class="form-text">Gunakan tanda <b>@</b> sebagai placeholder nama fasilitas saat disalin.</div>
-        </div>`,
+        <div class="row g-0">
+          <div class="mb-3 col-md-7"><label for="tplTitle" class="form-label">Nama template *</label><input id="tplTitle" class="form-control" value="${escapeHtml(t.title)}" placeholder="Contoh: Surat Undangan Rapat Koordinasi"></div>
+          <div class="mb-3 col-md-5"><label for="tplDesc" class="form-label">Deskripsi singkat</label><input id="tplDesc" class="form-control" value="${escapeHtml(t.desc || "")}" placeholder="Contoh: Undangan rapat bulanan"></div>
+        </div>
+        <div class="mb-2"><label for="tplText" class="form-label">Isi surat / pesan *</label><textarea id="tplText" class="form-control" rows="10" style="white-space:pre-wrap" placeholder="Tulis isi surat atau pesan...">${escapeHtml(t.text)}</textarea></div>
+        <div class="form-text">Gunakan tanda <b>@</b> sebagai placeholder nama fasilitas saat disalin.</div>
+      </div>`,
             preConfirm: () => {
               const title = $("tplTitle").value.trim(),
                 text = $("tplText").value.trim();
@@ -2734,16 +3081,16 @@
             title: "Undangan Link Zoom",
             width: 640,
             html: `<div class="text-start mt-2">
-        <label for="zoomTemplatePick" class="form-label">Fasilitas & jadwal kegiatan</label><select id="zoomTemplatePick" class="form-select">${optHtml}</select>
-        <label for="zoomTplVariant" class="form-label mt-3">Jenis pesan</label><select id="zoomTplVariant" class="form-select">${zoomVariantOptions()}</select>
-        <div class="form-text">Undangan umum, H-1, maupun hari-H — berlaku untuk semua jenis kegiatan.</div>
-        <label for="zoomTplAgenda" class="form-label mt-3">Jenis kegiatan / agenda undangan</label><select id="zoomTplAgenda" class="form-select">${presetHtml}</select>
-        <input id="zoomTplAgendaCustom" class="form-control mt-2 hidden" placeholder="Tulis agenda undangan, contoh: Sosialisasi Baru Fitur Rekap">
-        <div class="form-text">Pilih jenis kegiatan (kick-off, training, monitoring, dsb.) atau tulis sendiri; bagian agenda pada pesan akan menyesuaikan.</div>
-        <label for="zoomTplDue" class="form-label mt-3">Due date / tenggat kegiatan</label>
-        <input id="zoomTplDue" type="date" class="form-control">
-        <div class="form-text">Tenggat akan disisipkan ke pesan (<b>⏰ Tenggat kegiatan</b>) agar penerima tahu batas waktu. Kosongkan jika tidak perlu.</div>
-      </div>`,
+      <label for="zoomTemplatePick" class="form-label">Fasilitas & jadwal kegiatan</label><select id="zoomTemplatePick" class="form-select">${optHtml}</select>
+      <label for="zoomTplVariant" class="form-label mt-3">Jenis pesan</label><select id="zoomTplVariant" class="form-select">${zoomVariantOptions()}</select>
+      <div class="form-text">Undangan umum, H-1, maupun hari-H — berlaku untuk semua jenis kegiatan.</div>
+      <label for="zoomTplAgenda" class="form-label mt-3">Jenis kegiatan / agenda undangan</label><select id="zoomTplAgenda" class="form-select">${presetHtml}</select>
+      <input id="zoomTplAgendaCustom" class="form-control mt-2 hidden" placeholder="Tulis agenda undangan, contoh: Sosialisasi Baru Fitur Rekap">
+      <div class="form-text">Pilih jenis kegiatan (kick-off, training, monitoring, dsb.) atau tulis sendiri; bagian agenda pada pesan akan menyesuaikan.</div>
+      <label for="zoomTplDue" class="form-label mt-3">Due date / tenggat kegiatan</label>
+      <input id="zoomTplDue" type="date" class="form-control">
+      <div class="form-text">Tenggat akan disisipkan ke pesan (<b>⏰ Tenggat kegiatan</b>) agar penerima tahu batas waktu. Kosongkan jika tidak perlu.</div>
+    </div>`,
             showCancelButton: true,
             confirmButtonText: "Lanjutkan",
             cancelButtonText: "Batal",
@@ -3169,6 +3516,13 @@
         $("addTemplateBtn").addEventListener("click", () =>
           openUserTemplateForm(),
         );
+        $("sendTemplate").addEventListener("change", () => {
+          sendTemplateId = $("sendTemplate").value;
+          updateSendPreview();
+        });
+        $("sendFacility").addEventListener("change", updateSendPreview);
+        $("sendCopyBtn").addEventListener("click", copySendLetter);
+        $("sendPrintBtn").addEventListener("click", printSendLetter);
         $("kanbanAddStage").addEventListener("click", () => openStageForm());
         $("boardTz").addEventListener("change", () => {
           appSettings.timezone = $("boardTz").value;
@@ -3199,15 +3553,15 @@
             width: 640,
             icon: "info",
             html: `<div class="text-start mt-2">
-          <div class="alert alert-light border small py-2 mb-3"><i class="bi bi-whatsapp text-success me-1"></i> Request akan dikirimkan ke tim melalui WhatsApp <b>0858-1704-8266</b>.</div>
-          <div class="row g-0">
-            <div class="mb-3 col-md-6"><label for="reqName" class="form-label">Nama pengirim</label><input id="reqName" class="form-control" placeholder="Nama Anda"></div>
-            <div class="mb-3 col-md-6"><label for="reqCat" class="form-label">Kategori request *</label><select id="reqCat" class="form-select">${cats.map((c) => `<option>${c}</option>`).join("")}</select></div>
-          </div>
-          <div class="mb-3"><label for="reqTitle" class="form-label">Judul fitur / kendala *</label><input id="reqTitle" class="form-control" placeholder="Contoh: Notifikasi jadwal otomatis H-1"></div>
-          <div class="mb-3"><label for="reqDesc" class="form-label">Deskripsi *</label><textarea id="reqDesc" class="form-control" rows="4" placeholder="Jelaskan kebutuhan, tujuan, atau langkah reproduksi kendala..."></textarea></div>
-          <div class="mb-1"><label for="reqPriority" class="form-label">Prioritas</label><select id="reqPriority" class="form-select"><option>Rendah — kapan saja</option><option selected>Sedang — minggu ini</option><option>Tinggi — segera</option></select></div>
-        </div>`,
+        <div class="alert alert-light border small py-2 mb-3"><i class="bi bi-whatsapp text-success me-1"></i> Request akan dikirimkan ke tim melalui WhatsApp <b>0858-1704-8266</b>.</div>
+        <div class="row g-0">
+          <div class="mb-3 col-md-6"><label for="reqName" class="form-label">Nama pengirim</label><input id="reqName" class="form-control" placeholder="Nama Anda"></div>
+          <div class="mb-3 col-md-6"><label for="reqCat" class="form-label">Kategori request *</label><select id="reqCat" class="form-select">${cats.map((c) => `<option>${c}</option>`).join("")}</select></div>
+        </div>
+        <div class="mb-3"><label for="reqTitle" class="form-label">Judul fitur / kendala *</label><input id="reqTitle" class="form-control" placeholder="Contoh: Notifikasi jadwal otomatis H-1"></div>
+        <div class="mb-3"><label for="reqDesc" class="form-label">Deskripsi *</label><textarea id="reqDesc" class="form-control" rows="4" placeholder="Jelaskan kebutuhan, tujuan, atau langkah reproduksi kendala..."></textarea></div>
+        <div class="mb-1"><label for="reqPriority" class="form-label">Prioritas</label><select id="reqPriority" class="form-select"><option>Rendah — kapan saja</option><option selected>Sedang — minggu ini</option><option>Tinggi — segera</option></select></div>
+      </div>`,
             showCancelButton: true,
             confirmButtonText: "Kirim ke WhatsApp",
             cancelButtonText: "Batal",
