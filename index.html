@@ -92,6 +92,22 @@
     .card-actions button:hover{color:#0d6efd}
     @media(max-width:1100px){.kanban{grid-template-columns:repeat(var(--kanban-cols,6),230px)}}
 
+    /* Scheduling & timeline */
+    .card-range{display:flex;align-items:center;gap:5px;font-size:.68rem;color:#6c757d;margin-top:7px;flex-wrap:wrap}
+    .range-badge{display:inline-flex;align-items:center;border-radius:.25rem;padding:2px 6px;font-size:.66rem;font-weight:700;white-space:nowrap}
+    .badge-overdue{background:#f8d7da;color:#842029}
+    .badge-near{background:#fff3cd;color:#664d03}
+    .badge-ok{background:#e7f5ff;color:#084298}
+    .tz-chip{background:#e9ecef;border-radius:.25rem;padding:1px 5px;font-size:.62rem;font-weight:700;color:#495057}
+    .sched-item{border:1px solid #e9ecef;border-radius:.375rem;padding:.6rem .7rem;background:#fff}
+    .sched-time{font-size:.78rem;font-weight:600;color:#212529;display:flex;align-items:center;gap:5px}
+    .sched-note{font-size:.75rem;color:#6c757d;margin-top:3px}
+    .task-row{display:flex;gap:.5rem;align-items:center;margin-bottom:.4rem}
+    .task-row .form-control{font-size:.78rem}
+    .sched-list{max-height:340px;overflow-y:auto}
+
+
+
     /* Templates */
     .templates-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
     @media(max-width:767.98px){.templates-grid{grid-template-columns:1fr}}
@@ -157,6 +173,7 @@
     <div class="nav-label">Tools</div>
     <button class="nav-item" data-view="templates"><i class="bi bi-chat-square-text"></i> Template Pesan</button>
     <button class="nav-item" data-view="settings"><i class="bi bi-sliders"></i> Pengaturan Data</button>
+    <button class="nav-item" id="sidebarRequestFeature"><i class="bi bi-megaphone"></i> Request Update Fitur</button>
   </div>
   <div class="sidebar-footer">Medic Contact Tracker<br>By Itsmebroarif · v1.1<br><span class="text-success">&#9679;</span> Data tersimpan di browser ini</div>
 </aside>
@@ -209,6 +226,15 @@
     </section>
 
     <section class="content-view" id="view-contacts">
+      <div class="card mb-3">
+        <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <span class="stat-icon bg-success-subtle text-success"><i class="bi bi-megaphone"></i></span>
+            <div><h2 class="h6 mb-1">Request Update Fitur</h2><p class="text-muted small mb-0">Punya ide atau menemukan kendala? Kirim permintaan update fitur langsung ke tim via WhatsApp.</p></div>
+          </div>
+          <button class="btn btn-success" id="contactsRequestBtn"><i class="bi bi-whatsapp"></i> Kirim Request via WhatsApp</button>
+        </div>
+      </div>
       <div class="card">
         <div class="card-body">
           <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
@@ -228,7 +254,16 @@
     <section class="content-view" id="view-kanban">
       <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
         <div><h2 class="h6 mb-1">Pipeline Implementasi</h2><p class="text-muted small mb-0">Pindahkan kartu antar-tahapan dengan drag-and-drop, atau ubah status melalui menu edit.</p></div>
-        <div class="d-flex gap-2 flex-wrap"><button class="btn btn-outline-primary" id="kanbanAddStage"><i class="bi bi-plus-lg"></i> Tambah Tahapan</button><button class="btn btn-primary" id="kanbanAdd"><i class="bi bi-plus-lg"></i> Tambah Fasilitas</button></div>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+          <label class="text-muted small mb-0" for="boardTz">Zona waktu papan:</label>
+          <select id="boardTz" class="form-select form-select-sm" style="width:auto">
+            <option value="WIB">WIB (UTC+7)</option>
+            <option value="WITA">WITA (UTC+8)</option>
+            <option value="WIT">WIT (UTC+9)</option>
+          </select>
+          <button class="btn btn-outline-primary" id="kanbanAddStage"><i class="bi bi-plus-lg"></i> Tambah Tahapan</button>
+          <button class="btn btn-primary" id="kanbanAdd"><i class="bi bi-plus-lg"></i> Tambah Fasilitas</button>
+        </div>
       </div>
       <div class="kanban" id="kanbanBoard"></div>
     </section>
@@ -262,13 +297,22 @@
           </div>
         </div>
       </div>
-      <div class="card">
+      <div class="card mb-3">
         <div class="card-body">
           <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
-            <div><h2 class="h6 mb-1">Tahapan Pipeline</h2><p class="text-muted small mb-0">Urutan tahapan yang digunakan pada board Kanban. Tambah, edit, atau hapus tahapan sesuai kebutuhan tim.</p></div>
+            <div><h2 class="h6 mb-1">Tahapan Pipeline</h2><p class="text-muted small mb-0">Urutan tahapan pada board Kanban. Tambah, edit, hapus, atau geser posisi tahapan (panah naik/turun) sesuai kebutuhan tim.</p></div>
             <button class="btn btn-primary btn-sm" id="addStageBtn"><i class="bi bi-plus-lg"></i> Tambah Tahapan</button>
           </div>
           <div id="stageList"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+            <div><h2 class="h6 mb-1">Template Surat / Pesan Kustom</h2><p class="text-muted small mb-0">Buat template surat atau pesan sendiri. Tersedia di menu Template Pesan dan ikut terexport dalam cadangan JSON. Placeholder <b>@</b> diganti nama fasilitas.</p></div>
+            <button class="btn btn-primary btn-sm" id="addTemplateBtn"><i class="bi bi-plus-lg"></i> Tambah Template</button>
+          </div>
+          <div id="templateList"></div>
         </div>
       </div>
     </section>
@@ -281,6 +325,13 @@
 (() => {
   const STORAGE_KEY = 'medicContactTracker_v1';
   const STAGES_KEY = 'medicContactTracker_stages_v1';
+  const SETTINGS_KEY = 'medicContactTracker_settings_v1';
+  const TEMPLATES_KEY = 'medicContactTracker_templates_v1';
+  const TIMEZONES = {
+    WIB:{label:'WIB',full:'WIB (UTC+7)',offset:7},
+    WITA:{label:'WITA',full:'WITA (UTC+8)',offset:8},
+    WIT:{label:'WIT',full:'WIT (UTC+9)',offset:9}
+  };
   const DEFAULT_STAGES = [
     {id:'registered', label:'Terdaftar', color:'#8c9baa', desc:'Data fasilitas sudah dicatat'},
     {id:'kickoff', label:'Kick-Off', color:'#4787d8', desc:'Koordinasi awal dan penyamaan alur'},
@@ -293,21 +344,119 @@
   const PROTECTED_STAGE_IDS = ['registered','live'];
   const TYPES = ['Puskesmas','Klinik','Rumah Sakit','Labkesda','Labkesmas'];
   const TYPE_ICONS = {'Puskesmas':'bi-hospital','Klinik':'bi-heart-pulse','Rumah Sakit':'bi-building','Labkesda':'bi-eyedropper','Labkesmas':'bi-shield-plus'};
+  const ZOOM_VARIANTS=[
+    {id:'undangan',label:'Undangan Kegiatan (umum, kapanpun)'},
+    {id:'h1',label:'Pengingat H-1 (sehari sebelum kegiatan)'},
+    {id:'haday',label:'Info Hari-H (hari pelaksanaan)'}
+  ];
+  function buildZoomMessage(variant,name,info){
+    info=info||{};
+    const fac=name||'[Nama Fasilitas]';
+    const agenda=info.agenda||'Kegiatan Implementasi MedisinLab';
+    const when=info.when||'[Tanggal & waktu kegiatan]';
+    const link=info.link||'[Link Zoom]';
+    const due=info.dueDate||'';
+    const dueBlock=due?`\n⏰ Tenggat kegiatan : ${due}`:'';
+    const dueLine=due?`\n\n⏰ Mohon diselesaikan sebelum tenggat: ${due}.`:'';
+    const head=`Kepada Yth.\nBapak/Ibu Tim ${fac}\n\nDengan hormat,`;
+    const sig=`\n\nHormat kami,\nTim Implementasi MedisinLab\n— Arif`;
+    if(variant==='h1'){
+      return `${head}\n\nBersama ini kami sampaikan pengingat bahwa kegiatan ${agenda} dijadwalkan berlangsung besok, ${when}.${dueBlock}\n\nBerikut tautan Zoom untuk mengikuti kegiatan:\n🔗 ${link}${dueLine}\nKami mohon kesediaan Bapak/Ibu untuk hadir tepat waktu sesuai jadwal yang telah ditentukan. Apabila terdapat kendala akses atau perubahan jadwal, mohon kiranya disampaikan melalui grup koordinasi.\n\nTerima kasih atas perhatian dan kerja sama Bapak/Ibu.${sig}`;
+    }
+    if(variant==='haday'){
+      return `${head}\n\nKegiatan ${agenda} dijadwalkan berlangsung hari ini, ${when}.${dueBlock}\n\nBerikut tautan Zoom untuk mengikuti kegiatan:\n🔗 ${link}${dueLine}\nKami mohon Bapak/Ibu berkenan bergabung tepat waktu. Apabila mengalami kendala saat mengakses tautan, silakan disampaikan melalui grup koordinasi agar dapat segera kami bantu.\n\nDemikian pemberitahuan ini kami sampaikan. Terima kasih atas perhatian dan kerja samanya.${sig}`;
+    }
+    return `${head}\n\nSehubungan dengan agenda ${agenda}, bersama ini kami mengundang Bapak/Ibu untuk mengikuti kegiatan tersebut secara daring melalui tautan Zoom berikut:\n\n📅 Hari/Tanggal : ${when}${dueBlock}\n🏥 Fasilitas : ${fac}\n🎥 Platform : Zoom Meeting\n🔗 Tautan Zoom : ${link}${dueLine}\nApabila terdapat perubahan jadwal atau kendala akses, mohon kiranya disampaikan melalui grup koordinasi.\n\nDemikian undangan ini kami sampaikan. Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.${sig}`;
+  }
+  function zoomVariantOptions(selected){
+    return ZOOM_VARIANTS.map(v=>`<option value="${v.id}" ${v.id===(selected||'undangan')?'selected':''}>${escapeHtml(v.label)}</option>`).join('');
+  }
   const TEMPLATE_DATA = [
     {id:'kickoff',title:'Sesi Kick-Off',desc:'Pembukaan grup dan koordinasi implementasi',icon:'bi-rocket-takeoff',text:'Selamat siang, Bapak/Ibu. 😊\n\nPerkenalkan, saya Arif dari tim Medisin. Kami mengucapkan terima kasih banyak karena Bapak/Ibu telah bergabung di Grup Implementasi MedisinLab – @. 👋🏻\n\nGrup ini akan menjadi forum koordinasi dan diskusi selama proses implementasi MedisinLab berlangsung.\n\nTim Medisin siap mendampingi dan membantu setiap tahapan implementasi, mulai dari proses migrasi, pelatihan, monitoring, hingga sistem dapat berjalan dengan baik.\n\nApabila terdapat pertanyaan, kendala, atau hal yang perlu didiskusikan selama proses implementasi, silakan disampaikan melalui grup ini.\n\nSemoga proses implementasi MedisinLab di @ dapat berjalan dengan lancar dan memberikan manfaat yang optimal.\n\nTerima kasih atas waktu dan kerja samanya, Bapak/Ibu. 🙏🏻😊'},
     {id:'migration',title:'Follow Up — Migrasi Data',desc:'Memastikan progres penginputan dan kesiapan data',icon:'bi-database-check',text:'Selamat pagi Bapak/Ibu Tim @, izin follow up mengenai proses migrasi data. Mohon infonya apakah penginputan data telah selesai dilakukan? Jika ada kendala teknis maupun kendala pada format data, silakan diinfokan melalui grup ini. Terima kasih atas kerja samanya Bapak/Ibu semua 🙏😊'},
     {id:'training',title:'Sesi Training',desc:'Konfirmasi kesiapan pelaksanaan pelatihan',icon:'bi-easel2',text:'Selamat pagi Bapak/Ibu Tim @, izin follow up terkait pelaksanaan Sesi Training Aplikasi RME MedisinLab. Mohon infonya apakah dari pihak @ telah siap mengikuti sesi pelatihan? Jika terdapat kendala teknis atau penyesuaian jadwal sebelum sesi dimulai, silakan diinfokan melalui grup ini. Terima kasih atas kerja samanya Bapak/Ibu semua 🙏😊'},
     {id:'monitoring',title:'Monitoring & Evaluasi',desc:'Memantau penggunaan dan kendala setelah training',icon:'bi-clipboard2-check',text:'Selamat pagi Bapak/Ibu Tim @, izin follow up terkait proses monitoring dan evaluasi penggunaan aplikasi MedisinLab. Mohon informasinya apakah aplikasi sudah digunakan sesuai alur kerja dan apakah terdapat kendala yang perlu kami tindak lanjuti? Silakan sampaikan kendala, masukan, atau kebutuhan pendampingan melalui grup ini. Terima kasih atas kerja samanya Bapak/Ibu semua 🙏😊'},
-    {id:'live',title:'Persiapan Go-Live',desc:'Konfirmasi kesiapan menuju production',icon:'bi-check2-circle',text:'Selamat pagi Bapak/Ibu Tim @, izin follow up terkait persiapan Go-Live aplikasi MedisinLab. Mohon konfirmasi apakah data, akun pengguna, dan alur kerja utama telah siap digunakan di lingkungan production. Jika masih terdapat kendala atau hal yang perlu diverifikasi sebelum Go-Live, silakan diinformasikan melalui grup ini agar dapat kami tindak lanjuti bersama. Terima kasih atas kerja samanya Bapak/Ibu semua 🙏😊'}
+    {id:'live',title:'Persiapan Go-Live',desc:'Konfirmasi kesiapan menuju production',icon:'bi-check2-circle',text:'Selamat pagi Bapak/Ibu Tim @, izin follow up terkait persiapan Go-Live aplikasi MedisinLab. Mohon konfirmasi apakah data, akun pengguna, dan alur kerja utama telah siap digunakan di lingkungan production. Jika masih terdapat kendala atau hal yang perlu diverifikasi sebelum Go-Live, silakan diinformasikan melalui grup ini agar dapat kami tindak lanjuti bersama. Terima kasih atas kerja samanya Bapak/Ibu semua 🙏😊'},
+    {id:'zoom',title:'Undangan Link Zoom',desc:'Format universal formal: undangan, H-1, atau hari-H',icon:'bi-camera-video',text:'Kepada Yth.\nBapak/Ibu Tim @\n\nDengan hormat,\n\nSehubungan dengan agenda [AGENDA], bersama ini kami mengundang Bapak/Ibu untuk mengikuti kegiatan tersebut secara daring melalui tautan Zoom berikut:\n\n📅 Hari/Tanggal : [WAKTU]\n🏥 Fasilitas : @\n🎥 Platform : Zoom Meeting\n🔗 Tautan Zoom : [LINK]\n\nApabila terdapat perubahan jadwal atau kendala akses, mohon kiranya disampaikan melalui grup koordinasi.\n\nDemikian undangan ini kami sampaikan. Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.\n\nHormat kami,\nTim Implementasi MedisinLab\n— Arif'}
   ];
   const $ = id => document.getElementById(id);
   let facilities = loadData();
   let stages = loadStages();
+  let appSettings = loadSettings();
+  let userTemplates = loadUserTemplates();
   let activeView = 'overview';
   let draggedId = null;
 
-  function loadData(){ try { const raw=localStorage.getItem(STORAGE_KEY); const parsed=raw?JSON.parse(raw):[]; return Array.isArray(parsed)?parsed:[]; } catch(e){ return []; } }
+  function loadUserTemplates(){
+    try {
+      const raw=localStorage.getItem(TEMPLATES_KEY);
+      const parsed=raw?JSON.parse(raw):[];
+      if(Array.isArray(parsed))return parsed.filter(t=>t&&t.id&&t.title&&typeof t.text==='string').map(t=>({id:String(t.id),title:String(t.title),desc:String(t.desc||''),text:String(t.text)}));
+    } catch(e){}
+    return [];
+  }
+  function persistUserTemplates(){ localStorage.setItem(TEMPLATES_KEY,JSON.stringify(userTemplates)); }
+  function allTemplates(){ return [...TEMPLATE_DATA,...userTemplates]; }
+
+  function loadData(){ try { const raw=localStorage.getItem(STORAGE_KEY); const parsed=raw?JSON.parse(raw):[]; return Array.isArray(parsed)?parsed.map(normalizeSchedules):[]; } catch(e){ return []; } }
   function persist(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(facilities)); renderAll(); }
+  function loadSettings(){
+    try {
+      const raw=localStorage.getItem(SETTINGS_KEY);
+      const parsed=raw?JSON.parse(raw):null;
+      if(parsed&&TIMEZONES[parsed.timezone])return {timezone:parsed.timezone};
+    } catch(e){}
+    return {timezone:'WIB'};
+  }
+  function persistSettings(){ localStorage.setItem(SETTINGS_KEY,JSON.stringify(appSettings)); }
+  function tzInfo(key){ return TIMEZONES[key]||TIMEZONES.WIB; }
+  function boardTzKey(){ return appSettings.timezone||'WIB'; }
+  function facilityTzKey(f){ return (f&&f.timezone&&TIMEZONES[f.timezone])?f.timezone:boardTzKey(); }
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function fmtDateTimeLocal(dateISO,timeHHMM,tzKey){
+    if(!dateISO)return '—';
+    const tz=tzInfo(tzKey);
+    const d=new Date(dateISO+'T00:00:00');
+    if(isNaN(d))return '—';
+    const dateStr=d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+    return timeHHMM?`${dateStr}, ${timeHHMM} ${tz.label}`:`${dateStr} ${tz.label}`;
+  }
+  function fmtTimeOnly(timeHHMM,tzKey){ return timeHHMM?`${timeHHMM} ${tzInfo(tzKey).label}`:'—'; }
+  function fmtDateRange(f){
+    const tz=facilityTzKey(f);
+    if(f.startDate&&f.endDate)return `${fmtDateTimeLocal(f.startDate,null,tz)} – ${fmtDateTimeLocal(f.endDate,null,tz)}`;
+    if(f.startDate)return `mulai ${fmtDateTimeLocal(f.startDate,null,tz)}`;
+    if(f.endDate)return `hingga ${fmtDateTimeLocal(f.endDate,null,tz)}`;
+    return '';
+  }
+  function dueStatus(f){
+    if(!f.endDate)return 'none';
+    const today=todayISO();
+    if(f.endDate<today)return 'overdue';
+    const end=new Date(f.endDate+'T00:00:00');
+    const now=new Date(today+'T00:00:00');
+    const diffDays=Math.round((end-now)/86400000);
+    if(diffDays<=3)return 'near';
+    return 'ok';
+  }
+  function dueBadge(f){
+    const st=dueStatus(f);
+    if(st==='overdue')return '<span class="range-badge badge-overdue"><i class="bi bi-exclamation-triangle-fill me-1"></i>Lewat batas</span>';
+    if(st==='near')return '<span class="range-badge badge-near"><i class="bi bi-clock-fill me-1"></i>Mendekati tenggat</span>';
+    if(st==='ok')return '<span class="range-badge badge-ok"><i class="bi bi-calendar-check me-1"></i>On schedule</span>';
+    return '';
+  }
+  function normalizeSchedules(f){
+    if(!Array.isArray(f.schedules))f.schedules=[];
+    f.schedules.forEach(s=>{
+      if(!s.id)s.id='sch-'+uid().slice(4);
+      if(typeof s.zoomLink!=='string')s.zoomLink='';
+      s.zoomLink=s.zoomLink.trim();
+      if(!Array.isArray(s.tasks))s.tasks=[];
+      s.tasks.forEach(t=>{if(!t.id)t.id='tsk-'+uid().slice(4);});
+    });
+    return f;
+  }
   function loadStages(){
     try {
       const raw=localStorage.getItem(STAGES_KEY);
@@ -347,8 +496,9 @@
       settings:['Pengaturan Data','Kelola cadangan, impor, dan reset data lokal aplikasi.']
     }[view];
     $('pageTitle').textContent=meta[0];$('pageSubtitle').textContent=meta[1];
-    $('addBtn').classList.toggle('hidden',view==='templates'||view==='settings');
-    $('bulkBtn').classList.toggle('hidden',view==='templates'||view==='settings');
+    const hideTop=view==='templates'||view==='settings';
+    $('addBtn').classList.toggle('hidden',hideTop);
+    $('bulkBtn').classList.toggle('hidden',hideTop);
     closeSidebarMobile();
     renderAll();
   }
@@ -372,15 +522,44 @@
     $('contactRows').innerHTML=filtered.map(f=>`<tr><td>${facilityCell(f)}</td><td><span class="type-pill">${escapeHtml(f.type)}</span></td><td>${escapeHtml([f.city,f.province].filter(Boolean).join(', ')||'—')}</td><td>${escapeHtml(f.pic||'—')}<div class="facility-sub">${escapeHtml(f.phone||'')}${f.email?' · '+escapeHtml(f.email):''}</div></td><td>${statusPill(f)}</td><td>${dateText(f.goLiveDate)}</td><td>${actions(f)}</td></tr>`).join('');
     $('contactsEmpty').classList.toggle('hidden',filtered.length>0);
   }
+  function nextScheduleText(f){
+    const list=(f.schedules||[]).filter(s=>s.date).sort((a,b)=>(a.date+(a.startTime||'')).localeCompare(b.date+(b.startTime||'')));
+    if(!list.length)return '';
+    const today=todayISO();
+    const next=list.find(s=>(s.date+(s.startTime||'00:00'))>=today)||list[list.length-1];
+    return `<div class="card-range"><i class="bi bi-calendar-event"></i> ${escapeHtml(fmtDateTimeLocal(next.date,next.startTime,facilityTzKey(f)))}${next.endTime?' – '+escapeHtml(next.endTime):''}</div>`;
+  }
+  function kanbanCardHtml(f){
+    const range=fmtDateRange(f);
+    const badge=dueBadge(f);
+    const schedCount=(f.schedules||[]).length;
+    return `<article class="kanban-card" draggable="true" data-id="${f.id}">
+      <div class="card-top"><div class="card-name">${escapeHtml(f.name)}</div><span class="card-type">${escapeHtml(f.type)}</span></div>
+      <div class="card-location"><i class="bi bi-geo-alt"></i>${escapeHtml([f.city,f.province].filter(Boolean).join(', ')||'Lokasi belum diisi')}</div>
+      ${range?`<div class="card-range"><i class="bi bi-calendar3"></i> ${range}</div>`:''}
+      ${badge?`<div class="mt-1">${badge}</div>`:''}
+      ${nextScheduleText(f)}
+      ${schedCount?`<div class="card-range"><i class="bi bi-list-check"></i> ${schedCount} jadwal kegiatan</div>`:''}
+      ${f.pic?`<div class="card-contact"><i class="bi bi-person"></i> ${escapeHtml(f.pic)}</div>`:''}
+      ${f.phone?`<div class="card-contact"><i class="bi bi-telephone"></i> ${escapeHtml(f.phone)}</div>`:''}
+      <div class="card-foot"><span class="card-date">${f.goLiveDate?'Target '+dateText(f.goLiveDate):'Update '+dateText(latestDate(f))}</span><div class="card-actions"><button title="Detail & jadwal" onclick="window.openCardDetail('${f.id}')"><i class="bi bi-calendar2-week"></i></button><button title="Salin pesan" onclick="window.copyFacilityMessage('${f.id}')"><i class="bi bi-chat-left-text"></i></button><button title="Edit" onclick="window.editFacility('${f.id}')"><i class="bi bi-pencil"></i></button><button title="Hapus" onclick="window.deleteFacility('${f.id}')"><i class="bi bi-trash3"></i></button></div></div>
+    </article>`;
+  }
   function renderKanban(){
     document.documentElement.style.setProperty('--kanban-cols',stages.length);
+    $('boardTz').value=boardTzKey();
     $('kanbanBoard').innerHTML=stages.map(s=>{
       const items=facilities.filter(f=>f.stage===s.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-      return `<div class="kanban-col" data-stage="${s.id}"><div class="kanban-col-head"><div class="kanban-col-title"><span class="stage-dot" style="background:${s.color}"></span>${escapeHtml(s.label)}</div><span class="stage-count">${items.length}</span></div><div class="kanban-cards" data-drop="${s.id}">${items.map(f=>`<article class="kanban-card" draggable="true" data-id="${f.id}"><div class="card-top"><div class="card-name">${escapeHtml(f.name)}</div><span class="card-type">${escapeHtml(f.type)}</span></div><div class="card-location"><i class="bi bi-geo-alt"></i>${escapeHtml([f.city,f.province].filter(Boolean).join(', ')||'Lokasi belum diisi')}</div>${f.pic?`<div class="card-contact"><i class="bi bi-person"></i> ${escapeHtml(f.pic)}</div>`:''}${f.phone?`<div class="card-contact"><i class="bi bi-telephone"></i> ${escapeHtml(f.phone)}</div>`:''}<div class="card-foot"><span class="card-date">${f.goLiveDate?'Target '+dateText(f.goLiveDate):'Update '+dateText(latestDate(f))}</span><div class="card-actions"><button title="Salin pesan" onclick="window.copyFacilityMessage('${f.id}')"><i class="bi bi-chat-left-text"></i></button><button title="Edit" onclick="window.editFacility('${f.id}')"><i class="bi bi-pencil"></i></button><button title="Hapus" onclick="window.deleteFacility('${f.id}')"><i class="bi bi-trash3"></i></button></div></div></article>`).join('')}</div></div>`;
+      return `<div class="kanban-col" data-stage="${s.id}"><div class="kanban-col-head"><div class="kanban-col-title"><span class="stage-dot" style="background:${s.color}"></span>${escapeHtml(s.label)}</div><span class="stage-count">${items.length}</span></div><div class="kanban-cards" data-drop="${s.id}">${items.map(kanbanCardHtml).join('')}</div></div>`;
     }).join('');
     document.querySelectorAll('.kanban-card').forEach(card=>{
-      card.addEventListener('dragstart',e=>{draggedId=card.dataset.id;e.dataTransfer.setData('text/plain',draggedId);e.dataTransfer.effectAllowed='move';});
+      card.addEventListener('dragstart',e=>{if(e.target.closest('.card-actions')){e.preventDefault();return;}draggedId=card.dataset.id;e.dataTransfer.setData('text/plain',draggedId);e.dataTransfer.effectAllowed='move';});
       card.addEventListener('dragend',()=>{draggedId=null;document.querySelectorAll('.kanban-col').forEach(c=>c.classList.remove('drag-over'));});
+      card.addEventListener('click',e=>{
+        if(e.target.closest('.card-actions'))return;
+        if(draggedId)return;
+        window.openCardDetail(card.dataset.id);
+      });
     });
     document.querySelectorAll('.kanban-col').forEach(col=>{
       col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('drag-over');});
@@ -388,23 +567,54 @@
       col.addEventListener('drop',e=>{e.preventDefault();col.classList.remove('drag-over');const id=e.dataTransfer.getData('text/plain')||draggedId;const f=facilities.find(x=>x.id===id);if(f&&f.stage!==col.dataset.stage){f.stage=col.dataset.stage;f.updatedAt=todayISO();persist();toast('Tahapan berhasil diperbarui.');}});
     });
   }
+  function templateCardHtml(t){
+    const custom=!!userTemplates.find(x=>x.id===t.id);
+    return `<article class="card"><div class="card-body"><div class="template-top"><div class="d-flex gap-2"><div class="template-icon"><i class="bi ${t.icon||'bi-file-earmark-text'}"></i></div><div><h3 class="h6 mb-0">${escapeHtml(t.title)}${custom?' <span class="badge text-bg-secondary align-middle">Kustom</span>':''}</h3><div class="text-muted small">${escapeHtml(t.desc||'Template buatan sendiri')}</div></div></div><div class="d-flex gap-2 flex-shrink-0">
+      ${custom?`<button class="btn btn-sm btn-outline-secondary" title="Edit template" onclick="window.editUserTemplate('${t.id}')"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm btn-outline-danger" title="Hapus template" onclick="window.deleteUserTemplate('${t.id}')"><i class="bi bi-trash3"></i></button>`:''}
+      <button class="btn btn-sm btn-outline-primary" onclick="window.copyTemplate('${t.id}')"><i class="bi bi-copy"></i> Salin</button></div></div><div class="template-body">${escapeHtml(t.text)}</div></div></article>`;
+  }
   function renderTemplates(){
-    $('templatesGrid').innerHTML=TEMPLATE_DATA.map(t=>`<article class="card"><div class="card-body"><div class="template-top"><div class="d-flex gap-2"><div class="template-icon"><i class="bi ${t.icon}"></i></div><div><h3 class="h6 mb-0">${escapeHtml(t.title)}</h3><div class="text-muted small">${escapeHtml(t.desc)}</div></div></div><button class="btn btn-sm btn-outline-primary" onclick="window.copyTemplate('${t.id}')"><i class="bi bi-copy"></i> Salin</button></div><div class="template-body">${escapeHtml(t.text)}</div></div></article>`).join('');
+    $('templatesGrid').innerHTML=allTemplates().map(templateCardHtml).join('');
+  }
+  function renderTemplateList(){
+    $('templateList').innerHTML=userTemplates.map(t=>`<div class="d-flex align-items-center gap-3 py-2 border-bottom">
+      <span class="rounded d-inline-grid align-items-center justify-content-center bg-primary-subtle text-primary" style="width:28px;height:28px;font-size:.75rem;flex-shrink:0"><i class="bi bi-file-earmark-text"></i></span>
+      <div class="flex-grow-1" style="min-width:0"><strong style="font-size:.8125rem">${escapeHtml(t.title)}</strong><div class="text-muted text-truncate" style="font-size:.72rem;margin-top:2px">${escapeHtml(t.desc||t.text.slice(0,80))}</div></div>
+      <div class="row-actions flex-shrink-0">
+        <button class="icon-btn" title="Salin template" onclick="window.copyTemplate('${t.id}')"><i class="bi bi-copy"></i></button>
+        <button class="icon-btn" title="Edit template" onclick="window.editUserTemplate('${t.id}')"><i class="bi bi-pencil"></i></button>
+        <button class="icon-btn" title="Hapus template" onclick="window.deleteUserTemplate('${t.id}')"><i class="bi bi-trash3"></i></button>
+      </div>
+    </div>`).join('') || `<div class="empty" style="padding:1.5rem"><strong>Belum ada template kustom</strong>Klik "Tambah Template" untuk membuat surat/pesan sendiri.</div>`;
   }
   function renderSettings(){
     $('stageList').innerHTML=stages.map((s,i)=>{
       const usage=facilities.filter(f=>f.stage===s.id).length;
+      const first=i===0,last=i===stages.length-1;
       return `<div class="d-flex align-items-center gap-3 py-2 border-bottom">
         <span class="rounded d-inline-grid align-items-center justify-content-center bg-light text-muted fw-bold" style="width:28px;height:28px;font-size:.7rem;flex-shrink:0">${i+1}</span>
         <span class="rounded-circle flex-shrink-0" style="width:9px;height:9px;background:${s.color}"></span>
         <div class="flex-grow-1" style="min-width:0"><strong style="font-size:.8125rem">${escapeHtml(s.label)}</strong><div class="text-muted" style="font-size:.72rem;margin-top:2px">${escapeHtml(s.desc||'—')}${usage?` · <span class="text-primary">${usage} fasilitas</span>`:''}</div></div>
         <div class="row-actions flex-shrink-0">
+          <button class="icon-btn" title="Naikkan posisi" ${first?'disabled style="opacity:.35;pointer-events:none"':''} onclick="window.moveStage('${s.id}',-1)"><i class="bi bi-arrow-up"></i></button>
+          <button class="icon-btn" title="Turunkan posisi" ${last?'disabled style="opacity:.35;pointer-events:none"':''} onclick="window.moveStage('${s.id}',1)"><i class="bi bi-arrow-down"></i></button>
           <button class="icon-btn" title="Edit tahapan" onclick="window.editStage('${s.id}')"><i class="bi bi-pencil"></i></button>
           <button class="icon-btn" title="Hapus tahapan" onclick="window.deleteStage('${s.id}')"><i class="bi bi-trash3"></i></button>
         </div>
       </div>`;
     }).join('') || `<div class="empty" style="padding:1.5rem"><strong>Belum ada tahapan</strong>Tambahkan tahapan pipeline terlebih dahulu.</div>`;
+    renderTemplateList();
   }
+  window.moveStage=(id,dir)=>{
+    const i=stages.findIndex(x=>x.id===id);
+    const j=i+dir;
+    if(i<0||j<0||j>=stages.length)return;
+    const [s]=stages.splice(i,1);
+    stages.splice(j,0,s);
+    persistStages();
+    toast(`Tahapan "${s.label}" dipindah ke posisi ${j+1}.`);
+  };
   async function openStageForm(existing=null){
     const s=existing||{label:'',color:STAGE_COLORS[stages.length%STAGE_COLORS.length],desc:''};
     const result=await Swal.fire({
@@ -449,12 +659,12 @@
   function fieldHtml(id,label,value='',type='text',placeholder='',required=false,span=false){return `<div class="mb-3 ${span?'col-12':'col-md-6'}"><label for="${id}" class="form-label">${label}${required?' *':''}</label><input id="${id}" type="${type}" class="form-control" value="${escapeHtml(value||'')}" placeholder="${escapeHtml(placeholder)}"></div>`;}
   function selectHtml(id,label,options,required=false){return `<div class="mb-3 col-md-6"><label for="${id}" class="form-label">${label}${required?' *':''}</label><select id="${id}" class="form-select">${options}</select></div>`;}
   async function openFacilityForm(existing=null){
-    const f=existing||{name:'',type:'Labkesda',stage:'registered',code:'',pic:'',phone:'',email:'',city:'',province:'',address:'',groupLink:'',startDate:todayISO(),goLiveDate:'',notes:''};
+    const f=existing||{name:'',type:'Labkesda',stage:'registered',code:'',pic:'',phone:'',email:'',city:'',province:'',address:'',groupLink:'',startDate:todayISO(),endDate:'',timezone:'',goLiveDate:'',notes:'',schedules:[]};
     const stageOptions=stages.map(s=>`<option value="${s.id}" ${f.stage===s.id?'selected':''}>${escapeHtml(s.label)}</option>`).join('');
     const typeOptions=TYPES.map(t=>`<option value="${t}" ${f.type===t?'selected':''}>${t}</option>`).join('');
     const TOTAL=3;
     let step=1;
-    const stepLabels=['Identitas','Kontak & Lokasi','Jadwal & Detail'];
+    const stepLabels=['Identitas','Kontak & Lokasi','Waktu & Detail'];
     const stepDots=stepLabels.map((lbl,i)=>`${i?`<div class="wizard-connector" data-conn="${i}"></div>`:''}<div class="wizard-step-dot" data-dot="${i+1}"><span class="num">${i+1}</span><span class="lbl">${lbl}</span></div>`).join('');
     const result=await Swal.fire({
       title:existing?'Edit Fasilitas':'Tambah Fasilitas',width:680,confirmButtonText:'Selanjutnya',showDenyButton:true,denyButtonText:'Kembali',showCancelButton:true,cancelButtonText:'Batal',focusConfirm:false,
@@ -480,7 +690,9 @@
         <div class="wizard-panel text-start" data-panel="3">
           <div class="row g-0">
             ${fieldHtml('fStart','Tanggal mulai',f.startDate,'date')}
+            ${fieldHtml('fEnd','Tanggal selesai (due date)',f.endDate,'date')}
             ${fieldHtml('fLive','Target Go-Live',f.goLiveDate,'date')}
+            <div class="mb-3 col-md-6"><label for="fTz" class="form-label">Zona waktu kartu</label><select id="fTz" class="form-select">${Object.keys(TIMEZONES).map(k=>`<option value="${k}" ${(f.timezone||boardTzKey())===k?'selected':''}>${TIMEZONES[k].full}</option>`).join('')}</select><div class="form-text">Kosongkan mengikuti zona waktu papan. Jadwal kegiatan diatur setelah disimpan (klik kartu di Kanban).</div></div>
             ${fieldHtml('fGroup','Link grup koordinasi',f.groupLink,'url','https://chat.whatsapp.com/... ',false,true)}
             <div class="mb-2 col-12"><label for="fAddress" class="form-label">Alamat</label><input id="fAddress" class="form-control" value="${escapeHtml(f.address)}" placeholder="Alamat fasilitas"></div>
             <div class="mb-1 col-12"><label for="fNotes" class="form-label">Catatan implementasi</label><textarea id="fNotes" class="form-control" rows="3" placeholder="Progress, kendala, tindak lanjut, jadwal...">${escapeHtml(f.notes)}</textarea></div>
@@ -504,11 +716,13 @@
           if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){Swal.showValidationMessage('Format email tidak valid.');return false;}
         }
         if(step===3){
-          const start=$('fStart').value,live=$('fLive').value;
+          const start=$('fStart').value,end=$('fEnd').value,live=$('fLive').value;
+          if(start&&end&&end<start){Swal.showValidationMessage('Tanggal selesai tidak boleh sebelum tanggal mulai.');return false;}
           if(start&&live&&live<start){Swal.showValidationMessage('Target Go-Live tidak boleh sebelum tanggal mulai.');return false;}
         }
         if(step<TOTAL){step++;updateWizard();return false;}
-        return {name:$('fName').value.trim(),type:$('fType').value,stage:$('fStage').value,code:$('fCode').value.trim(),pic:$('fPic').value.trim(),phone:$('fPhone').value.trim(),email:$('fEmail').value.trim(),city:$('fCity').value.trim(),province:$('fProvince').value.trim(),startDate:$('fStart').value,goLiveDate:$('fLive').value,groupLink:$('fGroup').value.trim(),address:$('fAddress').value.trim(),notes:$('fNotes').value.trim()};
+        const tzVal=$('fTz').value;
+        return {name:$('fName').value.trim(),type:$('fType').value,stage:$('fStage').value,code:$('fCode').value.trim(),pic:$('fPic').value.trim(),phone:$('fPhone').value.trim(),email:$('fEmail').value.trim(),city:$('fCity').value.trim(),province:$('fProvince').value.trim(),startDate:$('fStart').value,endDate:$('fEnd').value,timezone:tzVal===boardTzKey()?'':tzVal,goLiveDate:$('fLive').value,groupLink:$('fGroup').value.trim(),address:$('fAddress').value.trim(),notes:$('fNotes').value.trim()};
       }
     });
     function updateWizard(){
@@ -529,8 +743,8 @@
     }
     if(!result.isConfirmed)return;
     const now=todayISO();
-    if(existing){Object.assign(existing,result.value,{updatedAt:now});}
-    else{facilities.push({id:uid(),...result.value,createdAt:now,updatedAt:now});}
+    if(existing){Object.assign(existing,result.value,{updatedAt:now});normalizeSchedules(existing);}
+    else{facilities.push({id:uid(),...result.value,schedules:[],createdAt:now,updatedAt:now});}
     persist();toast(existing?'Data fasilitas diperbarui.':'Fasilitas berhasil ditambahkan.');
   }
   function bulkRowHtml(vals={}){
@@ -592,17 +806,232 @@
     if(!result.isConfirmed)return;
     const now=todayISO();
     result.value.forEach(r=>{
-      facilities.push({id:uid(),name:r.name,type:r.type,stage:r.stage,code:'',pic:r.pic,phone:r.phone,email:'',city:r.city,province:'',startDate:now,goLiveDate:'',groupLink:'',address:'',notes:'',createdAt:now,updatedAt:now});
+      facilities.push({id:uid(),name:r.name,type:r.type,stage:r.stage,code:'',pic:r.pic,phone:r.phone,email:'',city:r.city,province:'',startDate:now,endDate:'',timezone:'',goLiveDate:'',groupLink:'',address:'',notes:'',schedules:[],createdAt:now,updatedAt:now});
     });
     persist();toast(`${result.value.length} fasilitas berhasil ditambahkan.`);
   }
   window.editFacility=id=>{const f=facilities.find(x=>x.id===id);if(f)openFacilityForm(f);};
+  function tzSelectHtml(id,selected,cls='form-select'){
+    return `<select id="${id}" class="${cls}">${Object.keys(TIMEZONES).map(k=>`<option value="${k}" ${selected===k?'selected':''}>${TIMEZONES[k].full}</option>`).join('')}</select>`;
+  }
+  function zoomInviteText(f,s,variant){
+    return buildZoomMessage(variant||'undangan',f.name,scheduleZoomInfo(f,s));
+  }
+  window.copyZoomInvite=async(facId,schId)=>{
+    const f=facilities.find(x=>x.id===facId);if(!f)return;
+    const s=(f.schedules||[]).find(x=>x.id===schId);if(!s)return;
+    const build=()=>{
+      const tz=(s.timezone&&TIMEZONES[s.timezone])?s.timezone:facilityTzKey(f);
+      const info=scheduleZoomInfo(f,s);
+      const due=$('zoomDue').value;
+      info.dueDate=due?fmtDateTimeLocal(due,null,tz):'';
+      return buildZoomMessage($('zoomVariant').value,f.name,info);
+    };
+    const res=await Swal.fire({title:'Kirim Undangan Zoom',width:640,showCancelButton:true,confirmButtonText:'Salin Pesan',cancelButtonText:'Tutup',focusConfirm:false,
+      html:`<div class="text-start mt-2">
+        <label for="zoomVariant" class="form-label">Jenis pesan</label>
+        <select id="zoomVariant" class="form-select">${zoomVariantOptions()}</select>
+        <div class="form-text mb-2">Berlaku universal untuk semua jenis kegiatan: kick-off, training, monitoring & evaluasi, maupun agenda lainnya.</div>
+        <label for="zoomDue" class="form-label">Due date / tenggat kegiatan</label>
+        <input id="zoomDue" type="date" class="form-control" value="${escapeHtml(defaultDueDate(f,s))}">
+        <div class="form-text mb-2">Pratinjau pesan otomatis diperbarui. Kosongkan jika tidak menampilkan tenggat.</div>
+        <label for="zoomPreview" class="form-label">Pratinjau pesan <span class="text-muted fw-normal">(boleh diedit)</span></label>
+        <textarea id="zoomPreview" class="form-control" style="min-height:300px"></textarea>
+        <div class="form-text">Tautan Zoom: ${s.zoomLink?escapeHtml(s.zoomLink):'belum diisi pada jadwal ini.'}</div>
+      </div>`,
+      didOpen:()=>{
+        $('zoomPreview').value=build();
+        $('zoomVariant').addEventListener('change',()=>{$('zoomPreview').value=build();});
+        $('zoomDue').addEventListener('change',()=>{$('zoomPreview').value=build();});
+      },
+      preConfirm:()=>$('zoomPreview').value});
+    if(!res.isConfirmed)return;
+    const ok=await copyText(res.value);
+    if(ok)toast('Undangan Zoom disalin. Siap ditempel ke grup.');else Swal.fire({title:'Salin manual',input:'textarea',inputValue:res.value,confirmButtonText:'Tutup'});
+  };
+  window.quickZoomInvite=facId=>{
+    const f=facilities.find(x=>x.id===facId);if(!f)return;
+    const withZoom=[...(f.schedules||[])].filter(s=>s.zoomLink).sort((a,b)=>(a.date+(a.startTime||'')).localeCompare(b.date+(b.startTime||'')));
+    if(!withZoom.length){window.addSchedule(facId);return;}
+    if(withZoom.length===1){window.copyZoomInvite(facId,withZoom[0].id);return;}
+    const opts=withZoom.map(s=>`<option value="${s.id}">${escapeHtml(fmtDateTimeLocal(s.date,s.startTime,s.timezone||facilityTzKey(f)))}${s.endTime?' – '+escapeHtml(s.endTime):''}${s.note?' · '+escapeHtml(s.note):''}</option>`).join('');
+    Swal.fire({title:'Pilih jadwal undangan',html:`<div class="text-start mt-2"><label class="form-label" for="zoomPick">Jadwal dengan link Zoom</label><select id="zoomPick" class="form-select">${opts}</select></div>`,confirmButtonText:'Lanjut',showCancelButton:true,cancelButtonText:'Batal',focusConfirm:false,preConfirm:()=>$('zoomPick').value})
+      .then(res=>{if(res.isConfirmed&&res.value)window.copyZoomInvite(facId,res.value);});
+  };
+  function scheduleItemHtml(f,s){
+    const tz=(s.timezone&&TIMEZONES[s.timezone])?s.timezone:facilityTzKey(f);
+    const tasks=(s.tasks||[]);
+    const doneCount=tasks.filter(t=>t.done).length;
+    return `<div class="sched-item mb-2">
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <div class="sched-time"><i class="bi bi-clock"></i> ${escapeHtml(fmtDateTimeLocal(s.date,s.startTime,tz))}${s.endTime?' – '+escapeHtml(fmtTimeOnly(s.endTime,tz)):''}</div>
+        <div class="row-actions flex-shrink-0">
+          ${s.zoomLink?`<button class="icon-btn" title="Salin undangan Zoom" onclick="window.copyZoomInvite('${f.id}','${s.id}')"><i class="bi bi-camera-video-fill"></i></button>`:''}
+          <button class="icon-btn" title="Edit jadwal" onclick="window.editSchedule('${f.id}','${s.id}')"><i class="bi bi-pencil"></i></button>
+          <button class="icon-btn" title="Hapus jadwal" onclick="window.deleteSchedule('${f.id}','${s.id}')"><i class="bi bi-trash3"></i></button>
+        </div>
+      </div>
+      ${s.note?`<div class="sched-note"><i class="bi bi-journal-text me-1"></i>${escapeHtml(s.note)}</div>`:''}
+      ${s.zoomLink?`<div class="sched-note"><i class="bi bi-camera-video me-1"></i><a href="${escapeHtml(s.zoomLink)}" target="_blank" rel="noopener" class="text-decoration-none">${escapeHtml(s.zoomLink)}</a></div>`:''}
+      ${tasks.length?`<div class="mt-2">${tasks.map(t=>`<div class="form-check mb-1"><input class="form-check-input" type="checkbox" ${t.done?'checked':''} id="tk-${t.id}" onchange="window.toggleTask('${f.id}','${s.id}','${t.id}')"><label class="form-check-label small ${t.done?'text-decoration-line-through text-muted':''}" for="tk-${t.id}">${escapeHtml(t.text)}${t.dueDate?` <span class="text-muted">· tenggat ${escapeHtml(fmtDateTimeLocal(t.dueDate,null,tz))}</span>`:''}</label></div>`).join('')}<div class="form-text">${doneCount}/${tasks.length} sub-tugas selesai</div></div>`:''}
+    </div>`;
+  }
+  window.openCardDetail=id=>{
+    const f=facilities.find(x=>x.id===id);if(!f)return;
+    const range=fmtDateRange(f);
+    const badge=dueBadge(f);
+    const tz=facilityTzKey(f);
+    const scheds=[...(f.schedules||[])].sort((a,b)=>(a.date+(a.startTime||'')).localeCompare(b.date+(b.startTime||'')));
+    Swal.fire({
+      title:escapeHtml(f.name),width:680,showCancelButton:true,cancelButtonText:'Tutup',showConfirmButton:true,confirmButtonText:'Edit Data Fasilitas',focusConfirm:false,
+      html:`<div class="text-start mt-2">
+        <div class="d-flex flex-wrap gap-2 mb-2">
+          <span class="type-pill">${escapeHtml(f.type)}</span>
+          <span class="badge bg-secondary">${escapeHtml(stage(f.stage).label)}</span>
+          ${badge}
+        </div>
+        <div class="row g-2 small mb-2">
+          <div class="col-sm-6"><i class="bi bi-geo-alt text-muted me-1"></i>${escapeHtml([f.city,f.province].filter(Boolean).join(', ')||'—')}</div>
+          <div class="col-sm-6"><i class="bi bi-person text-muted me-1"></i>${escapeHtml(f.pic||'—')}${f.phone?` · ${escapeHtml(f.phone)}`:''}</div>
+        </div>
+        ${range?`<div class="alert alert-light border py-2 small mb-2"><i class="bi bi-calendar3 me-1"></i><b>Rentang waktu:</b> ${range}<div class="form-text">Zona waktu kartu: ${tzInfo(tz).full}</div></div>`:''}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <strong class="small">Jadwal Kegiatan (${scheds.length})</strong>
+          <div class="d-flex gap-2">
+            ${scheds.some(s=>s.zoomLink)?`<button type="button" class="btn btn-sm btn-outline-success" onclick="window.quickZoomInvite('${f.id}')"><i class="bi bi-camera-video"></i> Undangan Zoom</button>`:''}
+            <button type="button" class="btn btn-sm btn-primary" onclick="window.addSchedule('${f.id}')"><i class="bi bi-plus-lg"></i> Tambah Jadwal</button>
+          </div>
+        </div>
+        <div class="sched-list">${scheds.length?scheds.map(s=>scheduleItemHtml(f,s)).join(''):'<div class="text-muted small py-2">Belum ada jadwal kegiatan. Klik "Tambah Jadwal" untuk membuat jadwal pertama.</div>'}</div>
+        ${f.notes?`<div class="mt-2 small"><i class="bi bi-sticky text-muted me-1"></i>${escapeHtml(f.notes)}</div>`:''}
+      </div>`,
+      preConfirm:()=>true
+    }).then(res=>{if(res.isConfirmed)openFacilityForm(f);});
+  };
+  window.addSchedule=facId=>openScheduleForm(facId,null);
+  window.editSchedule=(facId,schId)=>{const f=facilities.find(x=>x.id===facId);const s=f&&(f.schedules||[]).find(x=>x.id===schId);if(s)openScheduleForm(facId,s);};
+  window.toggleTask=(facId,schId,taskId)=>{
+    const f=facilities.find(x=>x.id===facId);if(!f)return;
+    const s=(f.schedules||[]).find(x=>x.id===schId);if(!s)return;
+    const t=(s.tasks||[]).find(x=>x.id===taskId);if(!t)return;
+    t.done=!t.done;f.updatedAt=todayISO();
+    persist();
+  };
+  window.deleteSchedule=async(facId,schId)=>{
+    const f=facilities.find(x=>x.id===facId);if(!f)return;
+    const res=await Swal.fire({title:'Hapus jadwal?',text:'Jadwal beserta checklist sub-tugasnya akan dihapus.',icon:'warning',showCancelButton:true,confirmButtonText:'Ya, hapus',cancelButtonText:'Batal',confirmButtonColor:'#dc3545'});
+    if(!res.isConfirmed)return;
+    f.schedules=(f.schedules||[]).filter(s=>s.id!==schId);
+    f.updatedAt=todayISO();persist();toast('Jadwal dihapus.');
+    window.openCardDetail(facId);
+  };
+  async function openScheduleForm(facId,existing=null){
+    const f=facilities.find(x=>x.id===facId);if(!f)return;
+    const tz=facilityTzKey(f);
+    let tasks=existing?(existing.tasks||[]).map(t=>({id:t.id,text:t.text||'',dueDate:t.dueDate||'',done:!!t.done})):[];
+    const renderTasks=()=>{
+      $('schTasks').innerHTML=tasks.map((t,i)=>`<div class="task-row" data-task-row="${i}">
+        <input class="form-control" data-t="text" value="${escapeHtml(t.text)}" placeholder="Sub-tugas / agenda singkat">
+        <input type="date" class="form-control" data-t="due" value="${escapeHtml(t.dueDate)}" style="max-width:150px" title="Batas waktu sub-tugas (opsional)">
+        <div class="form-check ms-1" title="Sudah selesai"><input class="form-check-input" type="checkbox" data-t="done" ${t.done?'checked':''}></div>
+        <button type="button" class="btn btn-outline-danger btn-sm" data-t="remove" title="Hapus baris"><i class="bi bi-x-lg"></i></button>
+      </div>`).join('')||'<div class="text-muted small mb-2">Belum ada sub-tugas.</div>';
+    };
+    const collectTasks=()=>{
+      tasks=[...$('schTasks').querySelectorAll('[data-task-row]')].map(row=>({
+        id:tasks[Number(row.dataset.taskRow)]?.id||'tsk-'+uid().slice(4),
+        text:row.querySelector('[data-t="text"]').value.trim(),
+        dueDate:row.querySelector('[data-t="due"]').value,
+        done:row.querySelector('[data-t="done"]').checked
+      })).filter(t=>t.text);
+    };
+    const result=await Swal.fire({
+      title:existing?'Edit Jadwal Kegiatan':'Tambah Jadwal Kegiatan',width:640,confirmButtonText:existing?'Simpan Jadwal':'Tambah Jadwal',showCancelButton:true,cancelButtonText:'Batal',focusConfirm:false,
+      html:`<div class="text-start mt-2">
+        <div class="row g-0">
+          <div class="mb-3 col-md-6"><label for="schDate" class="form-label">Tanggal kegiatan *</label><input id="schDate" type="date" class="form-control" value="${escapeHtml(existing?existing.date:'')}"></div>
+          <div class="mb-3 col-md-6"><label for="schTz" class="form-label">Zona waktu</label>${tzSelectHtml('schTz',tz)}</div>
+          <div class="mb-3 col-md-6"><label for="schStart" class="form-label">Jam mulai</label><input id="schStart" type="time" class="form-control" value="${escapeHtml(existing?existing.startTime||'':'')}"></div>
+          <div class="mb-3 col-md-6"><label for="schEnd" class="form-label">Jam selesai</label><input id="schEnd" type="time" class="form-control" value="${escapeHtml(existing?existing.endTime||'':'')}"></div>
+          <div class="mb-3 col-12"><label for="schNote" class="form-label">Catatan / agenda</label><textarea id="schNote" class="form-control" rows="2" placeholder="Contoh: Sesi kick-off daring bersama PIC laboratorium">${escapeHtml(existing?existing.note||'':'')}</textarea></div>
+          <div class="mb-1 col-12"><label for="schZoom" class="form-label">Link Zoom <span class="text-muted fw-normal">(opsional)</span></label><input id="schZoom" type="url" class="form-control" value="${escapeHtml(existing?existing.zoomLink||'':'')}" placeholder="https://zoom.us/j/1234567890"><div class="form-text">Jika diisi, tombol "Salin undangan Zoom" akan muncul pada jadwal dan pesan otomatis disusun lengkap dengan agenda, waktu, serta zona waktu.</div></div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <label class="form-label mb-0">Checklist / sub-tugas <span class="text-muted fw-normal">(opsional, punya batas waktu sendiri)</span></label>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="schAddTask"><i class="bi bi-plus-lg"></i> Sub-tugas</button>
+        </div>
+        <div id="schTasks"></div>
+        <div class="form-text mt-1">Contoh tampilan: ${escapeHtml(fmtDateTimeLocal(existing?existing.date:todayISO(),existing?existing.startTime:'09:00',tz))}</div>
+      </div>`,
+      didOpen:()=>{
+        renderTasks();
+        $('schAddTask').addEventListener('click',()=>{collectTasks();tasks.push({id:'tsk-'+uid().slice(4),text:'',dueDate:'',done:false});renderTasks();$('schTasks').querySelector('[data-task-row]:last-child [data-t="text"]').focus();});
+        $('schTasks').addEventListener('click',e=>{
+          const rm=e.target.closest('[data-t="remove"]');if(!rm)return;
+          collectTasks();const idx=Number(rm.closest('[data-task-row]').dataset.taskRow);
+          const rows=$('schTasks').querySelectorAll('[data-task-row]');
+          if(rows.length<=1){tasks=[];}else{tasks.splice(idx,1);}
+          renderTasks();
+        });
+      },
+      preConfirm:()=>{
+        const date=$('schDate').value;
+        if(!date){Swal.showValidationMessage('Tanggal kegiatan wajib diisi.');return false;}
+        const startTime=$('schStart').value,endTime=$('schEnd').value;
+        if(startTime&&endTime&&endTime<=startTime){Swal.showValidationMessage('Jam selesai harus setelah jam mulai.');return false;}
+        const zoomLink=$('schZoom').value.trim();
+        if(zoomLink&&!/^https?:\/\/\S+$/i.test(zoomLink)){Swal.showValidationMessage('Link Zoom harus diawali http:// atau https://.');return false;}
+        collectTasks();
+        return {date,startTime,endTime,note:$('schNote').value.trim(),zoomLink,timezone:$('schTz').value,tasks};
+      }
+    });
+    if(!result.isConfirmed)return;
+    if(existing){Object.assign(existing,result.value);}
+    else{(f.schedules=f.schedules||[]).push({id:'sch-'+uid().slice(4),...result.value});}
+    f.updatedAt=todayISO();
+    persist();toast(existing?'Jadwal diperbarui.':'Jadwal kegiatan ditambahkan.');
+    window.openCardDetail(facId);
+  }
   window.deleteFacility=async id=>{const f=facilities.find(x=>x.id===id);if(!f)return;const res=await Swal.fire({title:'Hapus fasilitas?',html:`Data <b>${escapeHtml(f.name)}</b> akan dihapus dari browser ini.`,icon:'warning',showCancelButton:true,confirmButtonText:'Ya, hapus',cancelButtonText:'Batal',confirmButtonColor:'#dc3545'});if(res.isConfirmed){facilities=facilities.filter(x=>x.id!==id);persist();toast('Fasilitas dihapus.');}};
   function getTemplateText(templateId,name){
-    const t=TEMPLATE_DATA.find(x=>x.id===templateId)||TEMPLATE_DATA[0];
+    const list=allTemplates();
+    const t=list.find(x=>x.id===templateId)||TEMPLATE_DATA[0];
     return t.text.replace(/@/g, name || '[Nama Fasilitas]');
   }
+  async function openUserTemplateForm(existing=null){
+    const t=existing||{title:'',desc:'',text:''};
+    const result=await Swal.fire({
+      title:existing?'Edit Template Surat':'Tambah Template Surat',width:640,confirmButtonText:existing?'Simpan Perubahan':'Tambah Template',showCancelButton:true,cancelButtonText:'Batal',focusConfirm:false,
+      html:`<div class="text-start mt-2">
+        <div class="row g-0">
+          <div class="mb-3 col-md-7"><label for="tplTitle" class="form-label">Nama template *</label><input id="tplTitle" class="form-control" value="${escapeHtml(t.title)}" placeholder="Contoh: Surat Undangan Rapat Koordinasi"></div>
+          <div class="mb-3 col-md-5"><label for="tplDesc" class="form-label">Deskripsi singkat</label><input id="tplDesc" class="form-control" value="${escapeHtml(t.desc||'')}" placeholder="Contoh: Undangan rapat bulanan"></div>
+        </div>
+        <div class="mb-2"><label for="tplText" class="form-label">Isi surat / pesan *</label><textarea id="tplText" class="form-control" rows="10" style="white-space:pre-wrap" placeholder="Tulis isi surat atau pesan...">${escapeHtml(t.text)}</textarea></div>
+        <div class="form-text">Gunakan tanda <b>@</b> sebagai placeholder nama fasilitas saat disalin.</div>
+      </div>`,
+      preConfirm:()=>{
+        const title=$('tplTitle').value.trim(),text=$('tplText').value.trim();
+        if(!title){Swal.showValidationMessage('Nama template wajib diisi.');return false;}
+        if(!text){Swal.showValidationMessage('Isi surat/pesan wajib diisi.');return false;}
+        return {title,text,desc:$('tplDesc').value.trim()};
+      }
+    });
+    if(!result.isConfirmed)return;
+    if(existing){Object.assign(existing,result.value);}
+    else{userTemplates.push({id:'tpl-'+uid(),...result.value});}
+    persistUserTemplates();renderAll();toast(existing?'Template diperbarui.':'Template surat ditambahkan.');
+  }
+  window.editUserTemplate=id=>{const t=userTemplates.find(x=>x.id===id);if(t)openUserTemplateForm(t);};
+  window.deleteUserTemplate=async id=>{
+    const t=userTemplates.find(x=>x.id===id);if(!t)return;
+    const res=await Swal.fire({title:'Hapus template?',html:`Template <b>${escapeHtml(t.title)}</b> akan dihapus permanen.`,icon:'warning',showCancelButton:true,confirmButtonText:'Ya, hapus',cancelButtonText:'Batal',confirmButtonColor:'#dc3545'});
+    if(!res.isConfirmed)return;
+    userTemplates=userTemplates.filter(x=>x.id!==id);
+    persistUserTemplates();renderAll();toast('Template dihapus.');
+  };
   window.copyTemplate=async id=>{
+    if(id==='zoom'){await copyZoomTemplate();return;}
     const choices=facilities.map(f=>`<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)} — ${escapeHtml(f.type)}</option>`).join('');
     const res=await Swal.fire({title:'Salin Template Pesan',html:`<div class="text-start mt-2"><label for="templateFacility" class="form-label">Nama fasilitas</label><select id="templateFacility" class="form-select"><option value="">Pilih fasilitas (opsional)</option>${choices}</select><div class="form-text">Setiap tanda @ akan diganti dengan nama fasilitas yang dipilih, apa pun jenisnya: Labkesda, Labkesmas, Rumah Sakit, Puskesmas, atau Klinik.</div></div>`,showCancelButton:true,confirmButtonText:'Lanjutkan',cancelButtonText:'Batal',preConfirm:()=>$('templateFacility').value});
     if(!res.isConfirmed)return;
@@ -610,6 +1039,94 @@
     const copied=await copyText(text);
     if(copied)toast('Template berhasil disalin.');else Swal.fire({icon:'info',title:'Template siap disalin',input:'textarea',inputValue:text,inputAttributes:{'aria-label':'Teks template'},confirmButtonText:'Tutup'});
   };
+  const ZOOM_AGENDA_PRESETS=['Kick-Off Meeting Implementasi','Sesi Training Aplikasi','Migrasi & Input Data','Monitoring & Evaluasi','Persiapan Go-Live','Follow Up Umum','Lainnya (tulis sendiri)'];
+  async function copyZoomTemplate(){
+    if(!facilities.length){Swal.fire({icon:'info',title:'Belum ada data',text:'Tambahkan fasilitas terlebih dahulu sebelum memakai template Zoom.'});return;}
+    const opts=[];
+    facilities.forEach(f=>{
+      const scheds=[...(f.schedules||[])].sort((a,b)=>(a.date+(a.startTime||'')).localeCompare(b.date+(b.startTime||'')));
+      if(scheds.length){
+        scheds.forEach(s=>{
+          const tz=(s.timezone&&TIMEZONES[s.timezone])?s.timezone:facilityTzKey(f);
+          opts.push({value:f.id+'|'+s.id,label:`${f.name} — ${fmtDateTimeLocal(s.date,s.startTime,tz)}${s.note?' · '+s.note:''}${s.zoomLink?'':' (belum ada link Zoom)'}`});
+        });
+      }
+      opts.push({value:f.id+'|',label:`${f.name} — tanpa jadwal (isi manual)`});
+    });
+    const optHtml=opts.map(o=>`<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`).join('');
+    const presetHtml=ZOOM_AGENDA_PRESETS.map(a=>`<option>${escapeHtml(a)}</option>`).join('');
+    const first=await Swal.fire({title:'Undangan Link Zoom',width:640,html:`<div class="text-start mt-2">
+      <label for="zoomTemplatePick" class="form-label">Fasilitas & jadwal kegiatan</label><select id="zoomTemplatePick" class="form-select">${optHtml}</select>
+      <label for="zoomTplVariant" class="form-label mt-3">Jenis pesan</label><select id="zoomTplVariant" class="form-select">${zoomVariantOptions()}</select>
+      <div class="form-text">Undangan umum, H-1, maupun hari-H — berlaku untuk semua jenis kegiatan.</div>
+      <label for="zoomTplAgenda" class="form-label mt-3">Jenis kegiatan / agenda undangan</label><select id="zoomTplAgenda" class="form-select">${presetHtml}</select>
+      <input id="zoomTplAgendaCustom" class="form-control mt-2 hidden" placeholder="Tulis agenda undangan, contoh: Sosialisasi Baru Fitur Rekap">
+      <div class="form-text">Pilih jenis kegiatan (kick-off, training, monitoring, dsb.) atau tulis sendiri; bagian agenda pada pesan akan menyesuaikan.</div>
+      <label for="zoomTplDue" class="form-label mt-3">Due date / tenggat kegiatan</label>
+      <input id="zoomTplDue" type="date" class="form-control">
+      <div class="form-text">Tenggat akan disisipkan ke pesan (<b>⏰ Tenggat kegiatan</b>) agar penerima tahu batas waktu. Kosongkan jika tidak perlu.</div>
+    </div>`,showCancelButton:true,confirmButtonText:'Lanjutkan',cancelButtonText:'Batal',focusConfirm:false,
+      didOpen:()=>{
+        const pick=$('zoomTemplatePick');
+        const currentDue=()=>{
+          const [fid,sid]=pick.value.split('|');
+          const ff=facilities.find(x=>x.id===fid);
+          const ss=sid?(ff&&(ff.schedules||[]).find(x=>x.id===sid)):null;
+          return defaultDueDate(ff,ss);
+        };
+        const syncDefault=()=>{
+          const [fid,sid]=pick.value.split('|');
+          const ff=facilities.find(x=>x.id===fid);
+          const ss=sid?(ff&&(ff.schedules||[]).find(x=>x.id===sid)):null;
+          if(ss&&ss.note&&ZOOM_AGENDA_PRESETS.includes(ss.note))$('zoomTplAgenda').value=ss.note;
+          $('zoomTplDue').value=currentDue();
+        };
+        syncDefault();
+        pick.addEventListener('change',syncDefault);
+        $('zoomTplAgenda').addEventListener('change',()=>{$('zoomTplAgendaCustom').classList.toggle('hidden',$('zoomTplAgenda').value!=='Lainnya (tulis sendiri)');if($('zoomTplAgenda').value==='Lainnya (tulis sendiri)')$('zoomTplAgendaCustom').focus();});
+      },
+      preConfirm:()=>{
+        let agenda=$('zoomTplAgenda').value;
+        if(agenda==='Lainnya (tulis sendiri)'){
+          agenda=$('zoomTplAgendaCustom').value.trim();
+          if(!agenda){Swal.showValidationMessage('Tulis nama kegiatan/agenda terlebih dahulu.');return false;}
+        }
+        const due=$('zoomTplDue').value;
+        if(due&&due<'1970-01-01'){Swal.showValidationMessage('Due date tidak valid.');return false;}
+        return {pick:$('zoomTemplatePick').value,variant:$('zoomTplVariant').value,agenda,due};
+      }});
+    if(!first.isConfirmed)return;
+    const {pick,variant,agenda,due}=first.value;
+    const [facId,schId]=String(pick||'').split('|');
+    const f=facilities.find(x=>x.id===facId);if(!f)return;
+    const s=schId?(f.schedules||[]).find(x=>x.id===schId):null;
+    const info=s?scheduleZoomInfo(f,s):{};
+    info.agenda=agenda;
+    info.dueDate=due?fmtDateTimeLocal(due,null,s?((s.timezone&&TIMEZONES[s.timezone])?s.timezone:facilityTzKey(f)):facilityTzKey(f)):'';
+    let text=buildZoomMessage(variant,f.name,info);
+    const res=await Swal.fire({title:'Pratinjau Undangan Zoom',width:640,html:`<div class="text-start mt-2"><label class="form-label" for="zoomTplPreview">Isi pesan (boleh diedit)</label><textarea id="zoomTplPreview" class="form-control" style="min-height:300px">${escapeHtml(text)}</textarea></div>`,showCancelButton:true,confirmButtonText:'Salin Pesan',cancelButtonText:'Tutup',focusConfirm:false,preConfirm:()=>$('zoomTplPreview').value});
+    if(!res.isConfirmed)return;
+    const copied=await copyText(res.value);
+    if(copied)toast('Undangan Zoom disalin.');else Swal.fire({icon:'info',title:'Salin manual',input:'textarea',inputValue:res.value,confirmButtonText:'Tutup'});
+  }
+  function scheduleZoomInfo(f,s){
+    const tz=(s.timezone&&TIMEZONES[s.timezone])?s.timezone:facilityTzKey(f);
+    const when=fmtDateTimeLocal(s.date,s.startTime,tz)+(s.endTime?` – ${s.endTime} ${tzInfo(tz).label}`:'');
+    const due=defaultDueDate(f,s);
+    return {agenda:s.note||'Kegiatan Implementasi MedisinLab',when,link:s.zoomLink||'[Link Zoom belum diisi pada jadwal ini]',dueDate:due?fmtDateTimeLocal(due,null,tz):''};
+  }
+  function defaultDueDate(f,s){
+    const taskDues=((s&&s.tasks)||[]).map(t=>t.dueDate).filter(Boolean).sort();
+    if(taskDues.length)return taskDues[taskDues.length-1];
+    if(f&&(f.endDate||f.goLiveDate))return f.endDate||f.goLiveDate;
+    return (s&&s.date)||'';
+  }
+  function zoomTextForFacility(f,tplText){
+    if(!tplText.includes('[AGENDA]'))return tplText;
+    const scheds=[...(f.schedules||[])].filter(s=>s.zoomLink).sort((a,b)=>(a.date+(a.startTime||'')).localeCompare(b.date+(b.startTime||'')));
+    if(!scheds.length)return tplText;
+    return buildZoomMessage('undangan',f.name,scheduleZoomInfo(f,scheds[0]));
+  }
   window.copyFacilityMessage=async id=>{
     const f=facilities.find(x=>x.id===id);if(!f)return;
     const known={'registered':'kickoff','kickoff':'kickoff','migration':'migration','training':'training','monitoring':'monitoring','live':'live'};
@@ -618,12 +1135,13 @@
       const i=stages.findIndex(s=>s.id===f.stage),last=Math.max(1,stages.length-1);
       relevant=i<=0?'kickoff':i>=stages.length-1?'live':TEMPLATE_DATA[Math.min(TEMPLATE_DATA.length-1,Math.max(0,Math.round(i/last*(TEMPLATE_DATA.length-1))))].id;
     }
-    const opts=TEMPLATE_DATA.map(t=>`<option value="${t.id}" ${t.id===relevant?'selected':''}>${escapeHtml(t.title)}</option>`).join('');
-    const res=await Swal.fire({title:'Buat Pesan Follow-Up',html:`<div class="text-start mt-2"><label for="msgTemplate" class="form-label">Jenis pesan</label><select id="msgTemplate" class="form-select">${opts}</select><label for="msgPreview" class="form-label mt-3">Pratinjau pesan</label><textarea id="msgPreview" class="form-control" style="min-height:230px">${escapeHtml(getTemplateText(relevant,f.name))}</textarea></div>`,showCancelButton:true,confirmButtonText:'Salin Pesan',cancelButtonText:'Tutup',didOpen:()=>{$('msgTemplate').addEventListener('change',()=>{$('msgPreview').value=getTemplateText($('msgTemplate').value,f.name);});},preConfirm:()=>$('msgPreview').value});
+    const opts=allTemplates().map(t=>`<option value="${t.id}" ${t.id===relevant?'selected':''}>${escapeHtml(t.title)}</option>`).join('');
+    const buildPreview=tplId=>zoomTextForFacility(f,getTemplateText(tplId,f.name));
+    const res=await Swal.fire({title:'Buat Pesan Follow-Up',html:`<div class="text-start mt-2"><label for="msgTemplate" class="form-label">Jenis pesan</label><select id="msgTemplate" class="form-select">${opts}</select><label for="msgPreview" class="form-label mt-3">Pratinjau pesan</label><textarea id="msgPreview" class="form-control" style="min-height:230px">${escapeHtml(buildPreview(relevant))}</textarea></div>`,showCancelButton:true,confirmButtonText:'Salin Pesan',cancelButtonText:'Tutup',didOpen:()=>{$('msgTemplate').addEventListener('change',()=>{$('msgPreview').value=buildPreview($('msgTemplate').value);});},preConfirm:()=>$('msgPreview').value});
     if(res.isConfirmed){const ok=await copyText(res.value);if(ok)toast('Pesan disalin. Siap ditempel ke grup koordinasi.');else Swal.fire({title:'Salin pesan secara manual',input:'textarea',inputValue:res.value,confirmButtonText:'Tutup'});}
   };
   async function copyText(text){try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true;}}catch(e){}try{const el=document.createElement('textarea');el.value=text;el.style.position='fixed';el.style.opacity='0';document.body.appendChild(el);el.select();const ok=document.execCommand('copy');el.remove();return ok;}catch(e){return false;}}
-  function exportJson(){const blob=new Blob([JSON.stringify({app:'Medic Contact Tracker — By Itsmebroarif',version:1,exportedAt:new Date().toISOString(),stages,facilities},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`medic-contact-tracker-${todayISO()}.json`;a.click();URL.revokeObjectURL(url);toast('Cadangan JSON diunduh.');}
+  function exportJson(){const blob=new Blob([JSON.stringify({app:'Medic Contact Tracker — By Itsmebroarif',version:1,exportedAt:new Date().toISOString(),settings:appSettings,stages,templates:userTemplates,facilities},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`medic-contact-tracker-${todayISO()}.json`;a.click();URL.revokeObjectURL(url);toast('Cadangan JSON diunduh.');}
   function validStageList(list){
     if(!Array.isArray(list)||!list.length)return null;
     const cleaned=list.filter(s=>s&&s.id&&s.label).map(s=>({id:String(s.id),label:String(s.label),color:/^#[0-9a-fA-F]{6}$/.test(s.color||'')?s.color:'#8c9baa',desc:String(s.desc||'')}));
@@ -639,13 +1157,18 @@
       const res=await Swal.fire({title:'Import data?',text:`${list.length} data fasilitas akan menggantikan data lokal saat ini.${incomingStages?` Daftar tahapan (${incomingStages.length}) juga akan dipulihkan.`:''}`,icon:'question',showCancelButton:true,confirmButtonText:'Import dan Ganti Data',cancelButtonText:'Batal'});
       if(res.isConfirmed){
         if(incomingStages){stages=incomingStages;localStorage.setItem(STAGES_KEY,JSON.stringify(stages));}
-        facilities=list.map(f=>({...f,id:f.id||uid(),type:TYPES.includes(f.type)?f.type:'Labkesda',stage:pool.some(s=>s.id===f.stage)?f.stage:pool[0].id,updatedAt:f.updatedAt||todayISO()}));
+        if(parsed&&!Array.isArray(parsed)&&parsed.settings&&TIMEZONES[parsed.settings.timezone]){appSettings.timezone=parsed.settings.timezone;persistSettings();}
+        if(parsed&&!Array.isArray(parsed)&&Array.isArray(parsed.templates)){
+          const valid=parsed.templates.filter(t=>t&&t.id&&t.title&&typeof t.text==='string').map(t=>({id:String(t.id),title:String(t.title),desc:String(t.desc||''),text:String(t.text)}));
+          if(valid.length){userTemplates=valid;persistUserTemplates();}
+        }
+        facilities=list.map(f=>normalizeSchedules({...f,id:f.id||uid(),type:TYPES.includes(f.type)?f.type:'Labkesda',stage:pool.some(s=>s.id===f.stage)?f.stage:pool[0].id,updatedAt:f.updatedAt||todayISO()}));
         persist();renderStageFilter();toast('Data berhasil diimpor.');
       }
     }catch(e){Swal.fire({icon:'error',title:'Import gagal',text:e.message||'File tidak dapat dibaca.'});}
     $('importFile').value='';
   }
-  async function resetAll(){const first=await Swal.fire({title:'Reset seluruh data?',html:'Semua data fasilitas pada browser ini akan dihapus dan tahapan pipeline dikembalikan ke bawaan.<br><b>Tindakan ini tidak dapat dibatalkan.</b>',icon:'warning',showCancelButton:true,confirmButtonText:'Lanjutkan',cancelButtonText:'Batal',confirmButtonColor:'#dc3545'});if(!first.isConfirmed)return;const second=await Swal.fire({title:'Konfirmasi terakhir',text:'Ketik RESET untuk mengosongkan seluruh data.',input:'text',inputPlaceholder:'Ketik RESET',showCancelButton:true,confirmButtonText:'Hapus Semua Data',cancelButtonText:'Batal',confirmButtonColor:'#dc3545',inputValidator:v=>v==='RESET'?undefined:'Ketik RESET dengan huruf kapital untuk melanjutkan.'});if(second.isConfirmed){facilities=[];stages=DEFAULT_STAGES.map(s=>({...s}));localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(STAGES_KEY);persist();renderStageFilter();setView('overview');Swal.fire({icon:'success',title:'Data berhasil direset',text:'Medic Contact Tracker kembali kosong dan siap digunakan dari awal.'});}}
+  async function resetAll(){const first=await Swal.fire({title:'Reset seluruh data?',html:'Semua data fasilitas pada browser ini akan dihapus dan tahapan pipeline dikembalikan ke bawaan.<br><b>Tindakan ini tidak dapat dibatalkan.</b>',icon:'warning',showCancelButton:true,confirmButtonText:'Lanjutkan',cancelButtonText:'Batal',confirmButtonColor:'#dc3545'});if(!first.isConfirmed)return;const second=await Swal.fire({title:'Konfirmasi terakhir',text:'Ketik RESET untuk mengosongkan seluruh data.',input:'text',inputPlaceholder:'Ketik RESET',showCancelButton:true,confirmButtonText:'Hapus Semua Data',cancelButtonText:'Batal',confirmButtonColor:'#dc3545',inputValidator:v=>v==='RESET'?undefined:'Ketik RESET dengan huruf kapital untuk melanjutkan.'});if(second.isConfirmed){facilities=[];stages=DEFAULT_STAGES.map(s=>({...s}));userTemplates=[];appSettings={timezone:'WIB'};localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(STAGES_KEY);localStorage.removeItem(SETTINGS_KEY);localStorage.removeItem(TEMPLATES_KEY);persist();renderStageFilter();setView('overview');Swal.fire({icon:'success',title:'Data berhasil direset',text:'Medic Contact Tracker kembali kosong dan siap digunakan dari awal.'});}}
 
   document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',e=>{e.preventDefault();setView(btn.dataset.view);}));
   document.querySelectorAll('[data-goto]').forEach(btn=>btn.addEventListener('click',()=>setView(btn.dataset.goto)));
@@ -657,8 +1180,43 @@
   $('addBtn').addEventListener('click',()=>openFacilityForm());$('kanbanAdd').addEventListener('click',()=>openFacilityForm());
   $('bulkBtn').addEventListener('click',()=>openBulkForm());
   $('addStageBtn').addEventListener('click',()=>openStageForm());
+  $('addTemplateBtn').addEventListener('click',()=>openUserTemplateForm());
   $('kanbanAddStage').addEventListener('click',()=>openStageForm());
+  $('boardTz').addEventListener('change',()=>{appSettings.timezone=$('boardTz').value;persistSettings();renderAll();toast('Zona waktu papan: '+tzInfo(boardTzKey()).full);});
   $('searchInput').addEventListener('input',renderContacts);$('typeFilter').addEventListener('change',renderContacts);$('stageFilter').addEventListener('change',renderContacts);
+  $('sidebarRequestFeature').addEventListener('click',()=>{closeSidebarMobile();openRequestFeature();});
+  $('contactsRequestBtn').addEventListener('click',openRequestFeature);
+  const WA_NUMBER='6285817048266';
+  async function openRequestFeature(){
+    const cats=['Fitur Baru','Perbaikan Bug / Error','Peningkatan Performa','UI / UX','Integrasi (WhatsApp, Zoom, dll)','Lainnya'];
+    const res=await Swal.fire({
+      title:'Request Update Fitur',width:640,icon:'info',
+      html:`<div class="text-start mt-2">
+        <div class="alert alert-light border small py-2 mb-3"><i class="bi bi-whatsapp text-success me-1"></i> Request akan dikirimkan ke tim melalui WhatsApp <b>0858-1704-8266</b>.</div>
+        <div class="row g-0">
+          <div class="mb-3 col-md-6"><label for="reqName" class="form-label">Nama pengirim</label><input id="reqName" class="form-control" placeholder="Nama Anda"></div>
+          <div class="mb-3 col-md-6"><label for="reqCat" class="form-label">Kategori request *</label><select id="reqCat" class="form-select">${cats.map(c=>`<option>${c}</option>`).join('')}</select></div>
+        </div>
+        <div class="mb-3"><label for="reqTitle" class="form-label">Judul fitur / kendala *</label><input id="reqTitle" class="form-control" placeholder="Contoh: Notifikasi jadwal otomatis H-1"></div>
+        <div class="mb-3"><label for="reqDesc" class="form-label">Deskripsi *</label><textarea id="reqDesc" class="form-control" rows="4" placeholder="Jelaskan kebutuhan, tujuan, atau langkah reproduksi kendala..."></textarea></div>
+        <div class="mb-1"><label for="reqPriority" class="form-label">Prioritas</label><select id="reqPriority" class="form-select"><option>Rendah — kapan saja</option><option selected>Sedang — minggu ini</option><option>Tinggi — segera</option></select></div>
+      </div>`,
+      showCancelButton:true,confirmButtonText:'Kirim ke WhatsApp',cancelButtonText:'Batal',focusConfirm:false,
+      preConfirm:()=>{
+        const title=$('reqTitle').value.trim(),desc=$('reqDesc').value.trim();
+        if(!title){Swal.showValidationMessage('Judul request wajib diisi.');return false;}
+        if(!desc){Swal.showValidationMessage('Deskripsi wajib diisi.');return false;}
+        return {name:$('reqName').value.trim(),cat:$('reqCat').value,title,desc,priority:$('reqPriority').value};
+      }
+    });
+    if(!res.isConfirmed)return;
+    const v=res.value;
+    const msg=`*REQUEST UPDATE FITUR*\n==========================\nNama : ${v.name||'-'}\nKategori : ${v.cat}\nPrioritas : ${v.priority.replace(/^(\w)/,m=>m.toUpperCase())}\nJudul : ${v.title}\n\nDeskripsi :\n${v.desc}\n\nSumber : Medic Contact Tracker\nWaktu : ${new Date().toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'})} ${tzInfo(boardTzKey()).label}`;
+    const url=`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+    await Swal.fire({icon:'question',title:'Kirim sekarang?',html:'Permintaan Anda akan dibuka di <b>WhatsApp</b> dan dikirim ke <b>0858-1704-8266</b>.',showCancelButton:true,confirmButtonText:'Buka WhatsApp',cancelButtonText:'Kembali',confirmButtonColor:'#198754'});
+    window.open(url,'_blank','noopener');
+    toast('Request siap dikirim via WhatsApp.');
+  }
   $('exportBtn').addEventListener('click',exportJson);$('settingsExport').addEventListener('click',exportJson);$('importBtn').addEventListener('click',()=>$('importFile').click());$('importFile').addEventListener('change',e=>{if(e.target.files[0])importJson(e.target.files[0]);});$('resetBtn').addEventListener('click',resetAll);
   $('todayLabel').textContent=new Date().toLocaleDateString('id-ID',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
   function renderStageFilter(){
